@@ -32,10 +32,26 @@ COMO REEMPLAZARLOS
 REQUISITOS DE LOS MODELOS
 -------------------------
 
-- Escala real: 1 unidad = 1 metro. Un plato de 25 cm de diametro tiene que
-  medir 0.25 en el modelo, si no aparece del tamano de un auto sobre la mesa.
-- Origen en la base del plato y centrado, porque se apoya en el piso/mesa
-  (ar-placement="floor").
+- ESCALA REAL: 1 unidad = 1 metro. Este es EL requisito que rompe todo cuando
+  se ignora.
+
+  Que el plato aparezca sobre la mesa y no en el piso NO se configura con
+  ningun atributo: depende solo del tamano del modelo. Tanto Quick Look (iOS)
+  como Scene Viewer (Android) buscan superficies horizontales y apoyan el
+  objeto donde entra. Un modelo de 2 metros no entra en una mesa, asi que se
+  va al piso; uno de 25 cm se apoya en la mesa solo.
+
+  Referencias utiles:
+    plato principal      24 - 28 cm de diametro,  6 - 10 cm de alto
+    plato de postre      18 - 20 cm de diametro,  5 -  8 cm de alto
+    vaso / copa           7 -  9 cm de diametro, 12 - 18 cm de alto
+    hamburguesa          12 - 14 cm de ancho,    10 - 13 cm de alto
+
+  Los archivos placeholder.glb/.usdz que vienen incluidos miden 2,01 m de
+  alto (es un astronauta). Por eso en la demo aparece parado en el piso.
+
+- Origen en la base del plato y centrado, porque el modelo se apoya sobre la
+  superficie detectada.
 - Peso: apuntar a menos de 5 MB por archivo. Se descargan con datos moviles,
   parados al lado de una mesa.
 - Formato: .glb (glTF binario, con las texturas embebidas), no .gltf suelto.

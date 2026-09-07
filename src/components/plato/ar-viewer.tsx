@@ -114,6 +114,21 @@ export function ArViewer({
           />
         </div>
 
+        {/*
+          ar-placement="floor" significa "superficie horizontal", no el piso:
+          la mesa entra. Solo lo leen WebXR y Scene Viewer; en iPhone, Quick
+          Look lo ignora y decide solo donde apoyar el modelo.
+
+          ar-scale="fixed" hace que el plato se vea a tamano real y que el
+          cliente no pueda agrandarlo con los dedos. Es el punto de todo esto:
+          mostrar la porcion que le van a servir. Si se puede redimensionar,
+          el menu miente. Se traduce a resizable=false en Scene Viewer y a
+          allowsContentScaling=0 en Quick Look.
+
+          Que el modelo quede sobre la mesa y no en el piso depende de que
+          este a escala real, no de estos atributos: un modelo de 2 m no entra
+          en una mesa. Ver public/models/README.txt.
+        */}
         {registrado && tieneModelo && (
           <model-viewer
             className="absolute inset-0"
@@ -123,6 +138,7 @@ export function ArViewer({
             ar
             ar-modes="webxr scene-viewer quick-look"
             ar-placement="floor"
+            ar-scale="fixed"
             camera-controls
             touch-action="pan-y"
             shadow-intensity="1"

@@ -13,7 +13,8 @@ export interface ModelViewerAttributes
   poster?: string;
   ar?: boolean;
   "ar-modes"?: string;
-  "ar-scale"?: string;
+  /** "fixed" bloquea el tamano real; "auto" deja que el usuario redimensione. */
+  "ar-scale"?: "auto" | "fixed";
   "ar-placement"?: "floor" | "wall";
   "camera-controls"?: boolean;
   "touch-action"?: string;
