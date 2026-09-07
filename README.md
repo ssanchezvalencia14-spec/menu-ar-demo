@@ -41,6 +41,8 @@ En el dashboard, **SQL Editor** > New query, y ejecutar en orden:
    calificaciones, funcion del ranking y lectura publica.
 2. `supabase/migrations/0002_panel.sql`: dueno del restaurante, horarios,
    zona horaria, bucket de archivos y politicas de escritura.
+3. `supabase/migrations/0003_quitar_adopcion_automatica.sql`: quita un trigger
+   temporal que 0002 dejaba armado.
 
 ### 3. Configurar las variables
 
@@ -99,13 +101,30 @@ revalida las rutas afectadas.
 ### Dar de alta un restaurante nuevo
 
 1. **Supabase > Authentication > Users > Add user**: correo y contrasena del
-   dueno, con "Auto Confirm User" activado.
+   dueno, **con "Auto Confirm User" activado**. Sin eso no puede entrar hasta
+   confirmar el correo, y el servicio de mail del plan gratuito esta limitado
+   a unos pocos envios por hora: el mensaje puede no llegar nunca.
 2. Le pasas esas credenciales. Entra a `/login`, cae en `/admin/bienvenida` y
    crea su local con dos datos: nombre y direccion web.
 3. El resto lo hace el: secciones, platos, horarios.
 
 No hay pantalla de registro publica a proposito. Un usuario por restaurante, y
-las altas las das vos al vender.
+las altas las das vos al vender. En **Authentication > Sign In / Up** conviene
+dejar apagado *"Allow new users to sign up"*: la anon key viaja al navegador,
+asi que con el registro abierto cualquiera con un correo real puede crearse una
+cuenta y ocupar slugs en tu base.
+
+### Asignar un restaurante existente a un usuario
+
+La propiedad se asigna de forma explicita. No hay ningun automatismo que la
+adivine: habia un trigger que le daba los restaurantes sin dueno al proximo
+usuario que se registrara, y se quito en la migracion 0003 justamente por eso.
+
+```sql
+update restaurants set owner_user_id = (
+  select id from auth.users where email = 'correo@del.cliente'
+) where slug = 'su-local';
+```
 
 ### Aislamiento entre restaurantes
 
@@ -123,8 +142,10 @@ npm run seed
 Borra el restaurante `demo` y lo vuelve a crear desde
 `supabase/seed/datos-iniciales.ts`. **Esto borra tambien las resenas y las
 vistas** (caen por `ON DELETE CASCADE`), asi que no lo corras despues de juntar
-datos de una demo real. Ademas deja el restaurante sin dueno: hay que volver a
-asignarle `owner_user_id`.
+datos de una demo real.
+
+Ademas **deja el restaurante sin dueno**, asi que despues del seed nadie lo ve
+en el panel hasta que le asignes el `owner_user_id` con el SQL de mas arriba.
 
 ---
 

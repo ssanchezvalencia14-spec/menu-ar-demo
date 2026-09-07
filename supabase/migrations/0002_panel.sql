@@ -56,8 +56,11 @@ comment on column restaurants.schedule is
 
 -- --------------------------------------- Adopcion del restaurante demo ---
 
+-- OJO: esto se revierte en 0003. Sirvio una sola vez, para pasarle el
+-- restaurante demo al primer usuario. Si estas montando el proyecto de cero,
+-- podes saltear este bloque: 0003 lo borra igual.
+--
 -- Cuando se crea el primer usuario, hereda el restaurante que quedo sin dueno.
--- Se limita solo: despues de la primera adopcion ya no hay huerfanos.
 create or replace function adoptar_restaurante_huerfano()
 returns trigger
 language plpgsql
