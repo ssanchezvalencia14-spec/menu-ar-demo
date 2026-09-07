@@ -1,14 +1,22 @@
 MODELOS 3D
 ==========
 
-placeholder.glb  -> modelo de prueba para Android (Scene Viewer) y para el
-                    visor 3D en el navegador.
-placeholder.usdz -> modelo de prueba para iOS (Quick Look).
+plato-demo.glb  -> modelo de prueba para Android (Scene Viewer) y para el
+                   visor 3D en el navegador.
+plato-demo.usdz -> modelo de prueba para iOS (Quick Look).
 
-Los dos son el "Astronaut" de la documentacion oficial de model-viewer
-(https://modelviewer.dev/shared-assets/models/). Estan aca solo para probar
-que el flujo de Realidad Aumentada funciona de punta a punta. Obviamente hay
-que reemplazarlos por los platos reales.
+Es un plato de porcelana con una porcion de comida, de 24 cm de diametro y
+5,6 cm de alto: las medidas de un plato principal de verdad. Esta generado por
+codigo, no escaneado, asi que la comida es un domo liso y no parece comida de
+verdad. Sirve para comprobar que el AR ubica bien el objeto sobre la mesa.
+
+Se regenera con:  node tools/generar-plato-demo.mjs
+(ese script produce el .glb; el .usdz se genero con el exportador que trae
+model-viewer adentro).
+
+Antes aca habia un astronauta de los ejemplos de model-viewer. Se saco porque
+media 2,01 m de alto y nunca se apoyaba en una mesa: siempre terminaba parado
+en el piso, que es exactamente el problema que este archivo explica abajo.
 
 
 COMO REEMPLAZARLOS
@@ -47,8 +55,7 @@ REQUISITOS DE LOS MODELOS
     vaso / copa           7 -  9 cm de diametro, 12 - 18 cm de alto
     hamburguesa          12 - 14 cm de ancho,    10 - 13 cm de alto
 
-  Los archivos placeholder.glb/.usdz que vienen incluidos miden 2,01 m de
-  alto (es un astronauta). Por eso en la demo aparece parado en el piso.
+  El plato-demo incluido mide 24 x 5,6 x 24 cm y por eso se apoya bien.
 
 - Origen en la base del plato y centrado, porque el modelo se apoya sobre la
   superficie detectada.

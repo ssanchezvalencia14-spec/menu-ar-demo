@@ -38,9 +38,9 @@ export interface RestauranteSeed {
   categorias: CategoriaSeed[];
 }
 
-/** Modelos de prueba. Ver public/models/README.txt para reemplazarlos. */
-const GLB = "/models/placeholder.glb";
-const USDZ = "/models/placeholder.usdz";
+/** Modelo de prueba a escala real (24 cm). Ver public/models/README.txt. */
+const GLB = "/models/plato-demo.glb";
+const USDZ = "/models/plato-demo.usdz";
 
 export const restauranteInicial: RestauranteSeed = {
   slug: "demo",

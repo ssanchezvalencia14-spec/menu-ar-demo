@@ -198,9 +198,10 @@ confiable. Hay que cargar las tres variables de entorno en Vercel.
 
 ## Modelos 3D
 
-Los que vienen (`public/models/placeholder.glb` y `.usdz`) son el astronauta de
-la documentacion de model-viewer. Estan para probar que el AR funciona de punta
-a punta; hay que reemplazarlos.
+El que viene (`public/models/plato-demo.glb` y `.usdz`) es un plato de 24 cm de
+diametro generado por codigo con `tools/generar-plato-demo.mjs`. Esta a escala
+real, asi que se apoya sobre la mesa como corresponde, pero la comida es un
+domo liso: sirve para probar el AR, no para vender.
 
 Ver `public/models/README.txt`. Los dos requisitos que mas rompen el AR:
 **escala real** (1 unidad = 1 metro) y **dos archivos por plato** (`.glb` para
