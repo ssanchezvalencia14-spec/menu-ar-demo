@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getSupabase } from "@/lib/supabase";
+import { normalizarHorarios } from "@/lib/horarios";
+import { getSupabasePublico } from "@/lib/supabase/servidor";
 import type {
   CategoryRow,
   MenuItemRow,
@@ -11,15 +12,13 @@ import type {
 import type { Calificacion, Categoria, Plato, Restaurante } from "@/types/menu";
 
 /**
- * Acceso a los datos del menu.
- *
- * En la Parte 1 esto leia de un archivo. Ahora consulta Supabase, pero la forma
- * que devuelve es la misma, asi que los componentes no cambiaron.
+ * Lectura del menu publico. El comensal no esta autenticado, asi que todo
+ * esto pasa por las politicas de lectura publica de RLS.
  */
 
 const SIN_CALIFICAR: Calificacion = { promedio: 0, cantidad: 0 };
 
-function aPlato(fila: MenuItemRow, calificacion: Calificacion): Plato {
+export function aPlato(fila: MenuItemRow, calificacion: Calificacion): Plato {
   return {
     id: fila.id,
     nombre: fila.name,
@@ -35,14 +34,33 @@ function aPlato(fila: MenuItemRow, calificacion: Calificacion): Plato {
   };
 }
 
-/** Busca las calificaciones de varios platos en una sola consulta. */
-async function getCalificaciones(
+export function aRestaurante(
+  fila: RestaurantRow,
+  categorias: Categoria[],
+): Restaurante {
+  return {
+    id: fila.id,
+    slug: fila.slug,
+    nombre: fila.name,
+    descripcion: fila.description ?? "",
+    logo: fila.logo_url,
+    direccion: fila.address,
+    horarios: normalizarHorarios(fila.hours),
+    zonaHoraria: fila.timezone,
+    moneda: fila.currency,
+    locale: fila.locale,
+    categorias,
+  };
+}
+
+/** Calificaciones de varios platos en una sola consulta, no una por plato. */
+export async function getCalificaciones(
   ids: string[],
 ): Promise<Map<string, Calificacion>> {
   const mapa = new Map<string, Calificacion>();
   if (ids.length === 0) return mapa;
 
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabasePublico()
     .from("menu_item_ratings")
     .select("menu_item_id, average_rating, review_count")
     .in("menu_item_id", ids);
@@ -59,33 +77,13 @@ async function getCalificaciones(
   return mapa;
 }
 
-function aRestaurante(
-  fila: RestaurantRow,
-  categorias: Categoria[],
-): Restaurante {
-  return {
-    id: fila.id,
-    slug: fila.slug,
-    nombre: fila.name,
-    descripcion: fila.description ?? "",
-    logo: fila.logo_url,
-    horario: fila.schedule ?? "",
-    moneda: fila.currency,
-    locale: fila.locale,
-    categorias,
-  };
-}
-
 type FilaMenuAnidada = RestaurantRow & {
   categories: (CategoryRow & { menu_items: MenuItemRow[] })[];
 };
 
-/**
- * Menu completo de un restaurante: categorias ordenadas, con sus platos
- * disponibles y sus calificaciones. Son dos consultas, no una por plato.
- */
+/** Menu completo de un restaurante, solo con lo que el comensal debe ver. */
 export async function getMenu(slug: string): Promise<Restaurante | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabasePublico()
     .from("restaurants")
     .select("*, categories(*, menu_items(*))")
     .eq("slug", slug)
@@ -116,7 +114,9 @@ export async function getMenu(slug: string): Promise<Restaurante | null> {
         .map((plato) =>
           aPlato(plato, calificaciones.get(plato.id) ?? SIN_CALIFICAR),
         ),
-    }));
+    }))
+    // Una categoria vacia en el menu publico es una tab que no lleva a nada.
+    .filter((categoria) => categoria.platos.length > 0);
 
   return aRestaurante(fila, categorias);
 }
@@ -135,7 +135,7 @@ export async function getPlato(
   categoria: Categoria;
   restaurante: Restaurante;
 } | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabasePublico()
     .from("menu_items")
     .select("*, categories(*), restaurants(*)")
     .eq("id", platoId)
@@ -148,6 +148,8 @@ export async function getPlato(
   // El id del plato es unico, pero la URL tambien nombra al restaurante:
   // si no coinciden, la URL esta mal armada y corresponde un 404.
   if (fila.restaurants.slug !== slug) return null;
+  // Un plato pausado no debe ser accesible ni con el link directo.
+  if (!fila.is_available) return null;
 
   const calificaciones = await getCalificaciones([fila.id]);
 
@@ -166,7 +168,7 @@ export async function getPlato(
 
 /** Slug del primer restaurante, para la redireccion de la raiz. */
 export async function getPrimerSlug(): Promise<string | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabasePublico()
     .from("restaurants")
     .select("slug")
     .order("created_at")
@@ -189,13 +191,14 @@ export const MINIMO_PARA_RANKING = 3;
 export async function getMasMiradosDeLaSemana(
   restaurante: Restaurante,
 ): Promise<{ plato: Plato; vistas: number }[]> {
-  const supabase = getSupabase();
-
-  const { data, error } = await supabase.rpc("get_weekly_top_items", {
-    p_restaurant_id: restaurante.id,
-    p_days: 7,
-    p_limit: MINIMO_PARA_RANKING,
-  });
+  const { data, error } = await getSupabasePublico().rpc(
+    "get_weekly_top_items",
+    {
+      p_restaurant_id: restaurante.id,
+      p_days: 7,
+      p_limit: MINIMO_PARA_RANKING,
+    },
+  );
 
   if (error || !data) return [];
 

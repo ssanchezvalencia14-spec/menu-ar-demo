@@ -32,7 +32,9 @@ export interface RestauranteSeed {
   nombre: string;
   descripcion: string;
   logo: string | null;
-  horario: string;
+  /** Misma franja todos los dias. El panel permite afinarla por dia. */
+  horario: { abre: string; cierra: string };
+  zonaHoraria: string;
   moneda: string;
   locale: string;
   categorias: CategoriaSeed[];
@@ -47,7 +49,8 @@ export const restauranteInicial: RestauranteSeed = {
   nombre: "Restaurante Demo",
   descripcion: "Carta de muestra",
   logo: null,
-  horario: "Todos los dias de 12:00 a 23:00",
+  horario: { abre: "12:00", cierra: "23:00" },
+  zonaHoraria: "America/Bogota",
   moneda: "COP",
   locale: "es-CO",
   categorias: [

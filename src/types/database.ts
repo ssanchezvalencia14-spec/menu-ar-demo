@@ -14,7 +14,13 @@ export interface RestaurantRow {
   name: string;
   description: string | null;
   logo_url: string | null;
+  address: string | null;
+  /** jsonb sin garantias de forma: pasarlo por normalizarHorarios(). */
+  hours: unknown;
+  timezone: string;
+  /** OBSOLETO desde la migracion 0002. El horario real vive en `hours`. */
   schedule: string | null;
+  owner_user_id: string | null;
   currency: string;
   locale: string;
   created_at: string;

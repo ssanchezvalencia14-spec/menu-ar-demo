@@ -45,6 +45,24 @@ export interface Categoria {
   platos: Plato[];
 }
 
+export type DiaSemana =
+  | "lunes"
+  | "martes"
+  | "miercoles"
+  | "jueves"
+  | "viernes"
+  | "sabado"
+  | "domingo";
+
+export interface FranjaHoraria {
+  /** "HH:MM" en 24 horas. */
+  abre: string;
+  cierra: string;
+  cerrado: boolean;
+}
+
+export type Horarios = Record<DiaSemana, FranjaHoraria>;
+
 export interface Restaurante {
   /** uuid de la fila en restaurants. */
   id: string;
@@ -55,8 +73,11 @@ export interface Restaurante {
   descripcion: string;
   /** Ruta al logo. `null` usa el monograma generado con la inicial. */
   logo: string | null;
-  /** Texto libre, una linea. Ej: "Todos los dias de 12 a 23 h". */
-  horario: string;
+  direccion: string | null;
+  /** Horario de atencion por dia de la semana. */
+  horarios: Horarios;
+  /** Zona IANA, ej. "America/Bogota". Define contra que reloj se abre y cierra. */
+  zonaHoraria: string;
   /** Codigo ISO de la moneda para formatear precios. */
   moneda: string;
   /** Locale usado para formatear precios. */

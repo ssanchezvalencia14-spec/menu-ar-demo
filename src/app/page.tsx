@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getPrimerSlug } from "@/lib/menu";
-import { supabaseConfigurado } from "@/lib/supabase";
+import { supabaseConfigurado } from "@/lib/supabase/config";
 
 /**
  * La raiz no tiene contenido propio: manda al menu del primer restaurante.

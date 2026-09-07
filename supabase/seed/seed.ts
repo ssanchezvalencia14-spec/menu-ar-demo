@@ -53,7 +53,12 @@ async function seed() {
       name: datos.nombre,
       description: datos.descripcion,
       logo_url: datos.logo,
-      schedule: datos.horario,
+      hours: Object.fromEntries(
+        ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"].map(
+          (dia) => [dia, { ...datos.horario, cerrado: false }],
+        ),
+      ),
+      timezone: datos.zonaHoraria,
       currency: datos.moneda,
       locale: datos.locale,
     })

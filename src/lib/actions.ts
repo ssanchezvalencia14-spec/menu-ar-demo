@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getSupabase } from "@/lib/supabase";
+import { getSupabasePublico } from "@/lib/supabase/servidor";
 
 /** Resultado que consume el formulario de resenas via useActionState. */
 export type EstadoResena =
@@ -43,7 +43,7 @@ export async function dejarResena(
     };
   }
 
-  const { error } = await getSupabase().from("reviews").insert({
+  const { error } = await getSupabasePublico().from("reviews").insert({
     menu_item_id: platoId,
     rating,
     comment: comentarioCrudo || null,
@@ -72,7 +72,7 @@ export async function dejarResena(
 export async function registrarVista(platoId: string): Promise<void> {
   if (!platoId) return;
 
-  const { error } = await getSupabase()
+  const { error } = await getSupabasePublico()
     .from("item_views")
     .insert({ menu_item_id: platoId });
 

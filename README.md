@@ -4,9 +4,9 @@ Menu digital de restaurante donde cada plato se puede ver en tamano real sobre
 la mesa, desde el navegador del celular y sin instalar ninguna app. Con
 resenas de clientes, ranking semanal y especialidad de la casa.
 
-**Estado**: Parte 1 (menu + AR + QR) y Parte 2 (Supabase + resenas + ranking)
-terminadas. Todavia no hay panel de administracion: el contenido se edita
-directo en Supabase.
+**Estado**: Partes 1 (menu + AR + QR), 2 (Supabase + resenas + ranking) y 4
+(panel de administracion) terminadas. El restaurante administra su menu solo,
+en `/admin`. Ya no hace falta tocar Supabase para operar un cliente.
 
 **En produccion**: https://menu-ar-demo-ten.vercel.app/demo
 (proyecto `utah1/menu-ar-demo` en Vercel, base `kganvantvhiurdxfuakv`).
@@ -35,9 +35,12 @@ Plan free, region la mas cercana.
 
 ### 2. Aplicar el esquema
 
-En el dashboard, **SQL Editor** > New query, pegar todo el contenido de
-`supabase/migrations/0001_init.sql` y ejecutarlo. Crea las tablas, los indices,
-la vista de calificaciones, la funcion del ranking y las politicas de RLS.
+En el dashboard, **SQL Editor** > New query, y ejecutar en orden:
+
+1. `supabase/migrations/0001_init.sql`: tablas, indices, vista de
+   calificaciones, funcion del ranking y lectura publica.
+2. `supabase/migrations/0002_panel.sql`: dueno del restaurante, horarios,
+   zona horaria, bucket de archivos y politicas de escritura.
 
 ### 3. Configurar las variables
 
@@ -75,37 +78,41 @@ Abre http://localhost:3000
 
 ---
 
-## Como editar el contenido (sin panel todavia)
+## El panel: /admin
 
-Todo se edita en **Supabase > Table Editor**. El panel de administracion es una
-fase posterior.
+El restaurante entra en `/login` y administra todo desde ahi.
 
-### Marcar un plato como especialidad de la casa
+| Pantalla | Que hace |
+| --- | --- |
+| `/admin` | platos activos y pausados, calificacion general, ranking semanal |
+| `/admin/platos` | inventario completo; pausar un plato con un toque |
+| `/admin/platos/nuevo` | alta: foto, precio, seccion, modelos 3D |
+| `/admin/secciones` | crear, renombrar, reordenar y eliminar secciones |
+| `/admin/horarios` | horario por dia, con dias cerrados |
+| `/admin/restaurante` | nombre, logo, direccion, URL del menu, zona horaria |
+| `/admin/bienvenida` | primer ingreso, cuando la cuenta todavia no tiene local |
 
-Tabla `menu_items`, columna **`is_specialty`**: ponerla en `true`. El plato
-pasa a mostrar una estrella en la card del grid y un badge "Especialidad de la
-casa" en el detalle.
+**No hay boton de publicar.** Lo que se edita aparece en el menu del cliente al
+instante: las paginas publicas se renderizan por pedido y cada accion del panel
+revalida las rutas afectadas.
 
-Por SQL, para varios de una:
+### Dar de alta un restaurante nuevo
 
-```sql
-update menu_items set is_specialty = true
-where name in ('Plato de carne', 'Postre de chocolate');
-```
+1. **Supabase > Authentication > Users > Add user**: correo y contrasena del
+   dueno, con "Auto Confirm User" activado.
+2. Le pasas esas credenciales. Entra a `/login`, cae en `/admin/bienvenida` y
+   crea su local con dos datos: nombre y direccion web.
+3. El resto lo hace el: secciones, platos, horarios.
 
-Los cambios se ven al recargar: las paginas del menu se renderizan por pedido,
-no hay cache que invalidar.
+No hay pantalla de registro publica a proposito. Un usuario por restaurante, y
+las altas las das vos al vender.
 
-### Otras columnas utiles
+### Aislamiento entre restaurantes
 
-| Tabla | Columna | Para que |
-| --- | --- | --- |
-| `menu_items` | `is_available` | `false` saca el plato del menu sin borrarlo |
-| `menu_items` | `sort_order` | orden dentro de la categoria |
-| `menu_items` | `price` | entero, sin decimales ni separadores |
-| `categories` | `sort_order` | orden de las tabs |
-| `categories` | `icon` | `entrada`, `principal`, `postre` o `bebida`; define el icono del placeholder de foto |
-| `restaurants` | `name`, `schedule`, `slug` | cabecera y URL del menu |
+Cada dueno solo ve y edita lo suyo. No lo garantiza el codigo del panel sino
+las politicas de RLS: aunque alguien manipulara un id desde el navegador, la
+base devuelve cero filas. Probado contra un segundo restaurante: renombrarlo
+afecta 0 filas, crearle una seccion da 403 y subirle un archivo da 400.
 
 ### Recargar el menu desde cero
 
@@ -116,11 +123,12 @@ npm run seed
 Borra el restaurante `demo` y lo vuelve a crear desde
 `supabase/seed/datos-iniciales.ts`. **Esto borra tambien las resenas y las
 vistas** (caen por `ON DELETE CASCADE`), asi que no lo corras despues de juntar
-datos de una demo real.
+datos de una demo real. Ademas deja el restaurante sin dueno: hay que volver a
+asignarle `owner_user_id`.
 
 ---
 
-## Como funcionan las tres piezas nuevas
+## Como funcionan las piezas
 
 ### Resenas
 
@@ -157,7 +165,23 @@ puede ver el ranking, no el historial crudo de vistas.
 
 ### Especialidad de la casa
 
-`menu_items.is_specialty`. Estrella en la card, badge con texto en el detalle.
+`menu_items.is_specialty`, editable desde el formulario del plato. Estrella en
+la card, badge con texto en el detalle.
+
+### Abierto / Cerrado
+
+Se calcula con `restaurants.hours` (jsonb, una franja por dia) y
+`restaurants.timezone`.
+
+Dos cosas que suelen salir mal y aca estan contempladas:
+
+- **La zona horaria.** El servidor de Vercel corre en UTC. Comparar el horario
+  contra ese reloj mostraria "Cerrado" a las 19:00 de Bogota, en plena cena.
+  Por eso el calculo usa `Intl.DateTimeFormat` fijado a la zona del local.
+- **Los locales que cierran despues de medianoche.** Para un bar de 20:00 a
+  02:00, la comparacion directa `abre <= ahora <= cierra` da falso siempre,
+  porque 02:00 es menor que 20:00. `estadoDeApertura()` detecta el cruce y
+  ademas revisa si la franja de ayer sigue vigente.
 
 ---
 
@@ -214,17 +238,22 @@ Android, `.usdz` para iPhone). Despues se apuntan las columnas
 
 ```
 src/
+├── proxy.ts                 refresca la sesion y protege /admin
 ├── types/
 │   ├── menu.ts              tipos del dominio (Restaurante, Categoria, Plato)
 │   ├── database.ts          forma de las filas de Supabase
 │   └── model-viewer.d.ts    tipos del web component de Google
 ├── lib/
-│   ├── supabase.ts          cliente con la anon key
-│   ├── menu.ts              todas las consultas de lectura
-│   ├── actions.ts           Server Actions: dejar resena, registrar vista
+│   ├── supabase/            clientes: publico, con sesion y de navegador
+│   ├── menu.ts              lecturas del menu publico
+│   ├── horarios.ts          abierto/cerrado con zona horaria
+│   ├── actions.ts           resenas y registro de vistas
+│   ├── admin/               lecturas y escrituras del panel
 │   └── format.ts            formato de precios
 ├── app/
 │   ├── page.tsx                        redirect + pantalla de setup
+│   ├── login/                          ingreso del dueno
+│   ├── admin/                          el panel
 │   └── [restaurante]/
 │       ├── page.tsx                    menu
 │       ├── plato/[id]/page.tsx         detalle
@@ -234,18 +263,21 @@ src/
     ├── menu/        header, ranking, tabs + grilla, card, placeholder de foto
     ├── plato/       detalle y visor 3D/AR
     ├── resenas/     estrellas y formulario
+    ├── admin/       campos, navegacion, listas y formularios del panel
     └── qr/          cartel imprimible
 
 supabase/
-├── migrations/0001_init.sql       esquema, indices, vista, funcion y RLS
+├── migrations/
+│   ├── 0001_init.sql             esquema, indices, vista, funcion y RLS
+│   └── 0002_panel.sql            dueno, horarios, storage y RLS de escritura
 └── seed/
     ├── datos-iniciales.ts         el menu de la demo (era src/data/menu.ts)
     └── seed.ts                    npm run seed
 ```
 
 **Stack**: Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 ·
-componentes base al estilo shadcn/ui · Supabase · `<model-viewer>` de Google ·
-`qrcode.react`.
+componentes base al estilo shadcn/ui · Supabase (base, auth y storage) ·
+`<model-viewer>` de Google · `qrcode.react`.
 
 ### Dos decisiones que conviene no revertir
 
