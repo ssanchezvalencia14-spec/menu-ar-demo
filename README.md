@@ -13,9 +13,16 @@ directo en Supabase.
 Esa es la URL que hay que poner en el QR: tiene HTTPS, que es requisito para
 que el AR abra en iPhone.
 
-Para publicar cambios: `npx vercel deploy --prod --yes` desde esta carpeta.
-El proyecto **no** esta conectado a ningun repositorio de Git a proposito,
-asi que no hay deploys automaticos.
+Repositorio: https://github.com/ssanchezvalencia14-spec/menu-ar-demo (privado).
+
+Para publicar cambios alcanza con `git push`: el proyecto de Vercel esta
+conectado a ese repositorio y cada push a `main` dispara un deploy a
+produccion. Tambien sirve `npx vercel deploy --prod --yes` para publicar sin
+pasar por Git.
+
+Cuidado al correr `vercel link` de nuevo en esta carpeta: detecta el remoto y
+puede reconectar el proyecto al repositorio equivocado. Se revisa con
+`vercel git disconnect` y `vercel git connect`.
 
 ---
 
