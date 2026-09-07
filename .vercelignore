@@ -8,7 +8,12 @@ node_modules
 out
 *.tsbuildinfo
 
-# El seed corre en la maquina del desarrollador, no en el servidor.
-supabase
+# Las migraciones y el seed corren en la maquina del desarrollador.
+#
+# La barra inicial NO es decorativa: sin ella el patron coincide en cualquier
+# nivel y tambien excluye src/lib/supabase/, con lo que el build falla con
+# "Module not found: Can't resolve '@/lib/supabase/config'".
+/supabase
 
-.claude-flow
+/tools
+/.claude-flow
