@@ -1,0 +1,14 @@
+# Nunca subir secretos ni artefactos locales.
+.env
+.env.*
+!.env.example
+
+node_modules
+.next
+out
+*.tsbuildinfo
+
+# El seed corre en la maquina del desarrollador, no en el servidor.
+supabase
+
+.claude-flow

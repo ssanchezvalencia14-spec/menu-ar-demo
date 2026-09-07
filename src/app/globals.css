@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/*
+  Paleta neutra a proposito: la interfaz no compite con la foto del plato ni
+  con el modelo 3D. Un solo tono oscuro para el boton de accion, un ambar
+  reservado para "especialidad de la casa".
+
+  La demo es solo modo claro. Un menu de mesa se mira con luz de restaurante y
+  el modo oscuro automatico del celular arruinaria el contraste de las fotos.
+*/
+
+@theme {
+  --color-lienzo: #faf9f7;
+  --color-superficie: #ffffff;
+  --color-tinta: #12100e;
+  --color-tinta-suave: #57534e;
+  --color-tinta-tenue: #8b8681;
+  --color-borde: #e8e5e1;
+  --color-borde-fuerte: #d6d2cc;
+  --color-destacado: #b45309;
+  --color-destacado-fondo: #fef6e7;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1rem;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-lienzo);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* El foco tiene que verse: la demo se usa con el dedo y con teclado. */
+  :focus-visible {
+    outline: 2px solid var(--color-tinta);
+    outline-offset: 2px;
+  }
+}
+
+@utility ocultar-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* El cartel de mesa se imprime en papel blanco, sin el fondo de la app. */
+@media print {
+  body {
+    background-color: #ffffff;
+  }
+}
+
+/* `<model-viewer>` se registra en el cliente. Antes de eso el navegador lo
+   trata como un elemento desconocido en linea; esto evita el salto de layout. */
+model-viewer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  --poster-color: transparent;
+}
