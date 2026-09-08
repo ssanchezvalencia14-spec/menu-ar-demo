@@ -51,6 +51,7 @@ export default async function EditarPlatoPage({
         categorias={categorias}
         restauranteId={restaurante.id}
         moneda={restaurante.moneda}
+        locale={restaurante.locale}
       />
     </div>
   );

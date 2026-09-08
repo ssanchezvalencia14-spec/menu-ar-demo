@@ -11,10 +11,10 @@ import type { Horarios } from "@/types/menu";
 
 export function FormularioDeHorarios({
   horarios,
-  zonaHoraria,
+  pais,
 }: {
   horarios: Horarios;
-  zonaHoraria: string;
+  pais: string;
 }) {
   const [resultado, enviar, enviando] = useActionState(
     guardarHorarios,
@@ -38,8 +38,8 @@ export function FormularioDeHorarios({
               key={dia}
               className="border-borde bg-superficie flex flex-col gap-2 rounded-card border p-3"
             >
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-tinta w-24 shrink-0 text-sm font-semibold">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="text-tinta w-full shrink-0 text-sm font-semibold sm:w-24">
                   {NOMBRE_DEL_DIA[dia]}
                 </span>
 
@@ -60,7 +60,7 @@ export function FormularioDeHorarios({
                 </label>
 
                 {!franja.cerrado && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-1 items-center gap-2">
                     <Entrada
                       type="time"
                       name={`${dia}-abre`}
@@ -72,7 +72,7 @@ export function FormularioDeHorarios({
                         }))
                       }
                       aria-label={`Hora de apertura del ${NOMBRE_DEL_DIA[dia]}`}
-                      className="h-10 w-32"
+                      className="h-11 w-full min-w-36 sm:w-40"
                     />
                     <span className="text-tinta-tenue text-sm">a</span>
                     <Entrada
@@ -86,7 +86,7 @@ export function FormularioDeHorarios({
                         }))
                       }
                       aria-label={`Hora de cierre del ${NOMBRE_DEL_DIA[dia]}`}
-                      className="h-10 w-32"
+                      className="h-11 w-full min-w-36 sm:w-40"
                     />
                   </div>
                 )}
@@ -123,9 +123,9 @@ export function FormularioDeHorarios({
       )}
 
       <p className="text-tinta-tenue text-xs">
-        El cartel de &quot;Abierto ahora&quot; se calcula con la hora de{" "}
-        <span className="text-tinta font-semibold">{zonaHoraria}</span>. Si tu
-        local esta en otra zona, cambiala en Mi local.
+        El cartel de &quot;Abierto ahora&quot; usa la hora de{" "}
+        <span className="text-tinta font-semibold">{pais}</span>. Si tu local
+        esta en otro pais, cambialo en Mi local.
       </p>
 
       <Button type="submit" size="lg" disabled={enviando} className="w-fit">

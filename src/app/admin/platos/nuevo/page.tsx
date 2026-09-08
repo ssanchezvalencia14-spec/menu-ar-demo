@@ -24,6 +24,7 @@ export default async function NuevoPlatoPage() {
         categorias={categorias}
         restauranteId={restaurante.id}
         moneda={restaurante.moneda}
+        locale={restaurante.locale}
       />
     </div>
   );

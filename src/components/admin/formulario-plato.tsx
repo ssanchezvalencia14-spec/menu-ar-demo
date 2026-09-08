@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,7 @@ import {
   Selector,
 } from "@/components/admin/campos";
 import { BotonDeBorrado } from "@/components/admin/confirmar";
+import { EntradaDePrecio } from "@/components/admin/entrada-precio";
 import { SubirArchivo } from "@/components/admin/subir-archivo";
 import {
   crearPlato,
@@ -27,12 +29,14 @@ export function FormularioDePlato({
   categorias,
   restauranteId,
   moneda,
+  locale,
 }: {
   /** undefined = alta. */
   plato?: PlatoAdmin;
   categorias: CategoriaAdmin[];
   restauranteId: string;
   moneda: string;
+  locale: string;
 }) {
   const [resultado, enviar, enviando] = useActionState(
     plato ? guardarPlato : crearPlato,
@@ -83,15 +87,12 @@ export function FormularioDePlato({
       </Campo>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Campo
-          etiqueta={`Precio (${moneda})`}
-          ayuda="Solo numeros enteros, sin puntos ni decimales."
-        >
-          <Entrada
+        <Campo etiqueta="Precio">
+          <EntradaDePrecio
             name="precio"
-            inputMode="numeric"
-            defaultValue={plato?.precio ?? ""}
-            required
+            defaultValue={plato?.precio}
+            locale={locale}
+            moneda={moneda}
           />
         </Campo>
 
@@ -118,39 +119,65 @@ export function FormularioDePlato({
         carpeta="fotos"
         restauranteId={restauranteId}
         valorInicial={plato?.imagen ?? null}
+        esImagen
       />
 
-      <fieldset className="border-borde flex flex-col gap-5 rounded-card border p-4">
-        <legend className="text-tinta px-1 text-sm font-semibold">
-          Modelo 3D para Realidad Aumentada
-        </legend>
+      {/* Casi ningun plato arranca con modelo 3D, asi que va plegado: si
+          estuviera siempre abierto, el formulario mas comun quedaria el doble
+          de largo por algo que la mayoria no va a completar. Se abre solo si
+          el plato ya tiene alguno. */}
+      <details
+        open={Boolean(plato?.modeloGlb || plato?.modeloUsdz)}
+        className="border-borde group rounded-card border"
+      >
+        <summary className="text-tinta cursor-pointer list-none p-4 text-sm font-semibold">
+          <span className="flex items-center justify-between gap-2">
+            <span className="flex flex-col gap-0.5">
+              Ver el plato en la mesa (3D)
+              <span className="text-tinta-tenue text-xs font-normal">
+                {plato?.modeloGlb || plato?.modeloUsdz
+                  ? "Ya tiene archivos cargados"
+                  : "Opcional. Sin esto el plato se ve igual, pero sin el boton de realidad aumentada."}
+              </span>
+            </span>
+            <ChevronDown
+              className="text-tinta-tenue size-5 shrink-0 transition-transform group-open:rotate-180"
+              aria-hidden
+            />
+          </span>
+        </summary>
 
-        <p className="text-tinta-suave text-xs">
-          Hacen falta los dos archivos: el <code>.glb</code> lo usa Android y
-          el navegador, el <code>.usdz</code> lo usa el iPhone. Si falta el
-          usdz, en iPhone el boton &quot;Ver en tu mesa&quot; no abre la camara.
-          El modelo tiene que estar a escala real: un plato de 24 cm mide 0,24
-          en el archivo.
-        </p>
+        <div className="flex flex-col gap-5 px-4 pb-4">
+          <p className="text-tinta-suave text-xs">
+            Se necesitan dos archivos, uno para cada tipo de celular. Si falta
+            el de iPhone, en esos telefonos el boton no abre la camara.
+          </p>
 
-        <SubirArchivo
-          nombreDelCampo="modeloGlb"
-          etiqueta="Modelo .glb (Android y navegador)"
-          extensiones={[".glb"]}
-          carpeta="modelos"
-          restauranteId={restauranteId}
-          valorInicial={plato?.modeloGlb ?? null}
-        />
+          <SubirArchivo
+            nombreDelCampo="modeloGlb"
+            etiqueta="Archivo para Android"
+            extensiones={[".glb"]}
+            carpeta="modelos"
+            restauranteId={restauranteId}
+            valorInicial={plato?.modeloGlb ?? null}
+          />
 
-        <SubirArchivo
-          nombreDelCampo="modeloUsdz"
-          etiqueta="Modelo .usdz (iPhone)"
-          extensiones={[".usdz"]}
-          carpeta="modelos"
-          restauranteId={restauranteId}
-          valorInicial={plato?.modeloUsdz ?? null}
-        />
-      </fieldset>
+          <SubirArchivo
+            nombreDelCampo="modeloUsdz"
+            etiqueta="Archivo para iPhone"
+            extensiones={[".usdz"]}
+            carpeta="modelos"
+            restauranteId={restauranteId}
+            valorInicial={plato?.modeloUsdz ?? null}
+          />
+
+          <p className="text-tinta-tenue text-xs">
+            Importante: el modelo tiene que estar hecho al tamano real del
+            plato. Si es mas grande, en el celular no se apoya sobre la mesa
+            sino en el piso.
+          </p>
+        </div>
+      </details>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Interruptor

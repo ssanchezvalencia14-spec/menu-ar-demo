@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -10,29 +10,13 @@ import {
   Entrada,
   Selector,
 } from "@/components/admin/campos";
+import { CampoDelLink } from "@/components/admin/campo-link";
 import { SubirArchivo } from "@/components/admin/subir-archivo";
 import { guardarRestaurante } from "@/lib/admin/acciones";
 import { RESULTADO_INICIAL } from "@/lib/admin/tipos";
+import { ZONAS } from "@/lib/zonas";
 import type { RestauranteAdmin } from "@/lib/admin/datos";
 
-/** Las zonas de America Latina, que es donde vive el producto hoy. */
-const ZONAS = [
-  "America/Bogota",
-  "America/Mexico_City",
-  "America/Lima",
-  "America/Santiago",
-  "America/Argentina/Buenos_Aires",
-  "America/Montevideo",
-  "America/Caracas",
-  "America/Guayaquil",
-  "America/La_Paz",
-  "America/Asuncion",
-  "America/Panama",
-  "America/Costa_Rica",
-  "America/Guatemala",
-  "America/Santo_Domingo",
-  "Europe/Madrid",
-];
 
 export function FormularioDeRestaurante({
   restaurante,
@@ -43,7 +27,6 @@ export function FormularioDeRestaurante({
     guardarRestaurante,
     RESULTADO_INICIAL,
   );
-  const [slug, setSlug] = useState(restaurante.slug);
 
   return (
     <form action={enviar} className="flex flex-col gap-5">
@@ -56,32 +39,7 @@ export function FormularioDeRestaurante({
         />
       </Campo>
 
-      <Campo
-        etiqueta="Direccion web de tu menu"
-        ayuda={
-          <>
-            Tu menu vive en{" "}
-            <span className="text-tinta font-semibold">/{slug || "..."}</span>.
-            Si la cambias, los codigos QR que ya imprimiste dejan de funcionar.
-          </>
-        }
-      >
-        <Entrada
-          name="slug"
-          value={slug}
-          onChange={(e) =>
-            setSlug(
-              e.target.value
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[̀-ͯ]/g, "")
-                .replace(/[^a-z0-9-]/g, "-"),
-            )
-          }
-          required
-          maxLength={60}
-        />
-      </Campo>
+      <CampoDelLink name="slug" slugInicial={restaurante.slug} />
 
       <Campo
         etiqueta="Descripcion corta"
@@ -111,16 +69,17 @@ export function FormularioDeRestaurante({
         carpeta="marca"
         restauranteId={restaurante.id}
         valorInicial={restaurante.logo}
+        esImagen
       />
 
       <Campo
-        etiqueta="Zona horaria"
-        ayuda="Define contra que reloj se calcula si estas abierto o cerrado."
+        etiqueta="Pais de tu local"
+        ayuda="Se usa para saber la hora local y mostrar si estas abierto o cerrado."
       >
         <Selector name="zonaHoraria" defaultValue={restaurante.zonaHoraria}>
           {ZONAS.map((zona) => (
-            <option key={zona} value={zona}>
-              {zona.split("/").pop()?.replace(/_/g, " ")} ({zona})
+            <option key={zona.valor} value={zona.valor}>
+              {zona.etiqueta}
             </option>
           ))}
         </Selector>

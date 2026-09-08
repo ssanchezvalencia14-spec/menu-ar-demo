@@ -1,5 +1,6 @@
 import { FormularioDeHorarios } from "@/components/admin/formulario-horarios";
 import { estadoDeApertura } from "@/lib/horarios";
+import { nombreDelPais } from "@/lib/zonas";
 import { exigirRestaurante } from "@/lib/admin/datos";
 
 export default async function HorariosPage() {
@@ -23,9 +24,14 @@ export default async function HorariosPage() {
         </p>
       </div>
 
+      {/* La `key` fuerza a rearmar el formulario cuando cambian los horarios
+          guardados. Sin esto, el estado local queda pegado al valor con el que
+          se monto y despues de guardar dos veces seguidas muestra datos
+          viejos. */}
       <FormularioDeHorarios
+        key={JSON.stringify(restaurante.horarios)}
         horarios={restaurante.horarios}
-        zonaHoraria={restaurante.zonaHoraria}
+        pais={nombreDelPais(restaurante.zonaHoraria)}
       />
     </div>
   );

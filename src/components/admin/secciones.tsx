@@ -15,12 +15,16 @@ import {
 import { RESULTADO_INICIAL } from "@/lib/admin/tipos";
 import type { CategoriaAdmin } from "@/lib/admin/datos";
 
-/** El icono decide el dibujo de fondo cuando el plato no tiene foto. */
+/**
+ * Dibujo que se usa de fondo en los platos que todavia no tienen foto.
+ * Se nombra por lo que se ve, no por la categoria: el dueno elige mirando
+ * el dibujo, no adivinando a que tipo pertenece su seccion.
+ */
 const ICONOS = [
-  { valor: "entrada", etiqueta: "Entradas (plato hondo)" },
-  { valor: "principal", etiqueta: "Principales (cubiertos)" },
-  { valor: "postre", etiqueta: "Postres (porcion de torta)" },
-  { valor: "bebida", etiqueta: "Bebidas (vaso)" },
+  { valor: "principal", etiqueta: "Cubiertos" },
+  { valor: "entrada", etiqueta: "Plato hondo" },
+  { valor: "postre", etiqueta: "Porcion de torta" },
+  { valor: "bebida", etiqueta: "Vaso" },
 ];
 
 export function GestionDeSecciones({
@@ -89,8 +93,8 @@ function FormularioDeAlta({ onListo }: { onListo: () => void }) {
       </Campo>
 
       <Campo
-        etiqueta="Tipo"
-        ayuda="Define el dibujo que se muestra cuando un plato no tiene foto."
+        etiqueta="Dibujo para los platos sin foto"
+        ayuda="Se usa de fondo mientras no cargues la foto real del plato."
       >
         <Selector name="icono" defaultValue="principal">
           {ICONOS.map((i) => (
@@ -150,7 +154,7 @@ function FilaDeSeccion({
             aria-label={`Subir ${categoria.nombre}`}
             disabled={esPrimera || moviendo}
             onClick={() => mover(() => void moverCategoria(categoria.id, "arriba"))}
-            className="text-tinta-tenue hover:text-tinta disabled:opacity-25"
+            className="text-tinta-suave hover:bg-lienzo hover:text-tinta flex size-8 items-center justify-center rounded disabled:opacity-20"
           >
             <ChevronUp className="size-5" aria-hidden />
           </button>
@@ -159,7 +163,7 @@ function FilaDeSeccion({
             aria-label={`Bajar ${categoria.nombre}`}
             disabled={esUltima || moviendo}
             onClick={() => mover(() => void moverCategoria(categoria.id, "abajo"))}
-            className="text-tinta-tenue hover:text-tinta disabled:opacity-25"
+            className="text-tinta-suave hover:bg-lienzo hover:text-tinta flex size-8 items-center justify-center rounded disabled:opacity-20"
           >
             <ChevronDown className="size-5" aria-hidden />
           </button>
@@ -249,7 +253,7 @@ function FormularioDeEdicion({
         />
       </Campo>
 
-      <Campo etiqueta="Tipo">
+      <Campo etiqueta="Dibujo para los platos sin foto">
         <Selector name="icono" defaultValue={categoria.icono}>
           {ICONOS.map((i) => (
             <option key={i.valor} value={i.valor}>
