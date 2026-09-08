@@ -18,6 +18,21 @@ import type { Calificacion, Categoria, Plato, Restaurante } from "@/types/menu";
 
 const SIN_CALIFICAR: Calificacion = { promedio: 0, cantidad: 0 };
 
+/**
+ * Columnas del restaurante que puede ver un comensal.
+ *
+ * Se listan a mano, en vez de pedir todas, para dejar afuera `owner_user_id`:
+ * es el identificador interno del usuario en auth.users y no tiene por que
+ * salir de la aplicacion.
+ *
+ * Y no es solo prolijidad. PostgREST traduce un `select=*` a un `SELECT *`,
+ * que exige permiso sobre la tabla entera; mientras la consulta pida todo, la
+ * base no puede restringir la columna. Pedir columnas explicitas es lo que
+ * permite que el GRANT por columna funcione.
+ */
+const COLUMNAS_PUBLICAS_DEL_RESTAURANTE =
+  "id, slug, name, description, logo_url, address, hours, timezone, currency, locale, created_at";
+
 export function aPlato(fila: MenuItemRow, calificacion: Calificacion): Plato {
   return {
     id: fila.id,
@@ -85,7 +100,7 @@ type FilaMenuAnidada = RestaurantRow & {
 export async function getMenu(slug: string): Promise<Restaurante | null> {
   const { data, error } = await getSupabasePublico()
     .from("restaurants")
-    .select("*, categories(*, menu_items(*))")
+    .select(`${COLUMNAS_PUBLICAS_DEL_RESTAURANTE}, categories(*, menu_items(*))`)
     .eq("slug", slug)
     .maybeSingle();
 
@@ -137,7 +152,7 @@ export async function getPlato(
 } | null> {
   const { data, error } = await getSupabasePublico()
     .from("menu_items")
-    .select("*, categories(*), restaurants(*)")
+    .select(`*, categories(*), restaurants(${COLUMNAS_PUBLICAS_DEL_RESTAURANTE})`)
     .eq("id", platoId)
     .maybeSingle();
 

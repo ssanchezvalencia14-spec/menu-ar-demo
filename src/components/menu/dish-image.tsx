@@ -11,6 +11,15 @@ const ICONO_POR_CATEGORIA = {
   bebida: CupSoda,
 } as const;
 
+/** El mismo host y prefijo que declara `images.remotePatterns`. */
+const PREFIJO_DE_STORAGE = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/menu/`
+  : null;
+
+function esImagenDeNuestroStorage(url: string) {
+  return Boolean(PREFIJO_DE_STORAGE && url.startsWith(PREFIJO_DE_STORAGE));
+}
+
 /**
  * Foto del plato.
  *
@@ -39,6 +48,11 @@ export function DishImage({
         fill
         sizes={sizes}
         priority={priority}
+        // Next solo optimiza los hosts declarados en next.config.ts y con
+        // cualquier otro tira una excepcion, que en esta pagina significa
+        // HTTP 500. Si el restaurante pego un enlace de otro dominio, se sirve
+        // sin optimizar: pierde el redimensionado, pero el menu no se cae.
+        unoptimized={!esImagenDeNuestroStorage(plato.imagen)}
         className={cn("object-cover", className)}
       />
     );

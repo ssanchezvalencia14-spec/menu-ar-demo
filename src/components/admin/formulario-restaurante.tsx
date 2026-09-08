@@ -65,7 +65,8 @@ export function FormularioDeRestaurante({
         nombreDelCampo="logo"
         etiqueta="Logo"
         ayuda="Cuadrado queda mejor. Si no cargas ninguno, se usa la inicial del nombre."
-        extensiones={[".jpg", ".jpeg", ".png", ".webp", ".svg"]}
+        // Sin .svg: un svg puede llevar script adentro y el bucket es publico.
+        extensiones={[".jpg", ".jpeg", ".png", ".webp"]}
         carpeta="marca"
         restauranteId={restaurante.id}
         valorInicial={restaurante.logo}
