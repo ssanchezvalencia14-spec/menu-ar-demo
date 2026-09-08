@@ -5,6 +5,7 @@ import { LoaderCircle, Smartphone, TriangleAlert, View } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { DishImage } from "@/components/menu/dish-image";
 import { registrarVista } from "@/lib/actions";
 import type { CategoriaIcono, Plato } from "@/types/menu";
@@ -131,7 +132,10 @@ export function ArViewer({
         */}
         {registrado && tieneModelo && (
           <model-viewer
-            className="absolute inset-0"
+            className={cn(
+              "absolute inset-0 transition-opacity duration-300 ease-out",
+              estado === "listo" ? "opacity-100" : "opacity-0",
+            )}
             src={plato.modelo3dGlb ?? undefined}
             ios-src={plato.modelo3dUsdz ?? undefined}
             alt={`Modelo 3D de ${plato.nombre}`}
@@ -149,7 +153,7 @@ export function ArViewer({
         )}
 
         {estado === "cargando" && tieneModelo && (
-          <div className="bg-superficie/85 absolute inset-0 flex flex-col items-center justify-center gap-4 backdrop-blur-sm">
+          <div className="animar-aparecer bg-superficie/85 absolute inset-0 flex flex-col items-center justify-center gap-4 backdrop-blur-sm">
             <LoaderCircle
               className="text-tinta size-8 animate-spin"
               aria-hidden
@@ -166,7 +170,7 @@ export function ArViewer({
         )}
 
         {estado === "error" && (
-          <div className="bg-superficie/90 absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+          <div className="animar-aparecer bg-superficie/90 absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
             <TriangleAlert className="text-tinta-suave size-8" aria-hidden />
             <p className="text-tinta text-base font-semibold">
               No pudimos cargar el modelo 3D

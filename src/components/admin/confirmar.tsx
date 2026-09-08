@@ -28,7 +28,7 @@ export function ConfirmarBorrado({
   const [enCurso, iniciar] = useTransition();
 
   return (
-    <div className="border-destacado bg-destacado-fondo flex flex-col gap-3 rounded-lg border p-4">
+    <div className="animar-entrada border-destacado bg-destacado-fondo flex flex-col gap-3 rounded-lg border p-4">
       <p className="text-tinta flex items-start gap-2 text-sm font-semibold">
         <TriangleAlert
           className="text-destacado mt-0.5 size-4 shrink-0"

@@ -27,7 +27,7 @@ export async function RankingSemanal({
   if (top.length === 0) return null;
 
   return (
-    <section className="border-borde border-b px-5 py-6">
+    <section className="animar-entrada border-borde border-b px-5 py-6">
       <div className="mx-auto max-w-3xl">
         <h2 className="text-tinta mb-4 flex items-center gap-2 text-lg font-bold">
           <TrendingUp className="size-5" aria-hidden />
@@ -36,10 +36,10 @@ export async function RankingSemanal({
 
         <ol className="flex flex-col gap-2">
           {top.map(({ plato }, indice) => (
-            <li key={plato.id}>
+            <li key={plato.id} className="animar-entrada-lateral" style={{ animationDelay: `${indice * 70}ms` }}>
               <Link
                 href={`/${restaurante.slug}/plato/${plato.id}`}
-                className="border-borde bg-superficie flex items-center gap-3 rounded-card border p-2 transition-transform active:scale-[0.99]"
+                className="border-borde bg-superficie flex items-center gap-3 rounded-card border p-2 transition-[transform,box-shadow] duration-[180ms] ease-out hover:shadow-md motion-safe:active:scale-[0.99]"
               >
                 <span
                   aria-hidden

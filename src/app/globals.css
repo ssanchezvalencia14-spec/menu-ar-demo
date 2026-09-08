@@ -54,6 +54,108 @@
   }
 }
 
+/* --------------------------------------------------------- Animaciones ---
+
+  Todas duran entre 150 y 300 ms y animan solo `opacity` y `transform`, que
+  son las dos propiedades que el navegador resuelve en la GPU sin recalcular
+  el layout. Animar `height`, `top` o `width` es lo que hace que una interfaz
+  se sienta pesada en un celular de gama media.
+
+  Nada corre en bucle: el protagonista es el plato, no la interfaz.
+*/
+
+@keyframes aparecer-desde-abajo {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aparecer-desde-izquierda {
+  from {
+    opacity: 0;
+    transform: translate3d(-12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes surgir {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@utility animar-entrada {
+  animation: aparecer-desde-abajo 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animar-entrada-lateral {
+  animation: aparecer-desde-izquierda 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animar-aparecer {
+  animation: aparecer 200ms ease-out both;
+}
+
+@utility animar-surgir {
+  animation: surgir 280ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/*
+  Respetar la preferencia del sistema no es opcional: para algunas personas el
+  movimiento en pantalla provoca mareo.
+
+  OJO con la receta popular de aplicar `transition-duration` a `*`: el valor
+  inicial de `transition-property` es `all`, asi que esa regla le pone una
+  transicion a TODA propiedad de TODO elemento. Medido en esta pagina: 222
+  transiciones vivas que mantienen ocupado al compositor. Termina empeorando el
+  rendimiento justo para quien pidio menos movimiento.
+
+  Por eso se apagan solo las animaciones propias. Los efectos de transform
+  (escala al tocar, elevacion al pasar por encima) se controlan con la variante
+  `motion-safe:` de Tailwind, que no genera ninguna transicion cuando la
+  preferencia esta activa.
+
+  El spinner de carga se deja andar: comunica que algo esta pasando, y sin el
+  la pantalla parece congelada.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .animar-entrada,
+  .animar-entrada-lateral,
+  .animar-aparecer,
+  .animar-surgir {
+    animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 /* El cartel de mesa se imprime en papel blanco, sin el fondo de la app. */
 @media print {
   body {

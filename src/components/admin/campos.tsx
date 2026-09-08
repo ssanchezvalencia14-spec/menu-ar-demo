@@ -104,7 +104,7 @@ export function Aviso({
     <p
       role={tipo === "error" ? "alert" : "status"}
       className={cn(
-        "rounded-lg px-3 py-2 text-sm font-semibold",
+        "animar-entrada rounded-lg px-3 py-2 text-sm font-semibold",
         tipo === "ok"
           ? "bg-emerald-50 text-emerald-800"
           : "bg-destacado-fondo text-destacado",

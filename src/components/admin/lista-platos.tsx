@@ -71,7 +71,9 @@ function FilaDePlato({
     <li
       className={cn(
         "border-borde bg-superficie flex items-center gap-3 rounded-card border p-3",
+        "transition-opacity duration-200 ease-out",
         !plato.disponible && "opacity-60",
+        cambiando && "opacity-40",
       )}
     >
       <span className="bg-lienzo relative size-14 shrink-0 overflow-hidden rounded-lg">

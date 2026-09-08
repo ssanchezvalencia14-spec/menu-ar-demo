@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import {
+  useActionState,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +19,7 @@ import {
   renombrarCategoria,
 } from "@/lib/admin/acciones";
 import { RESULTADO_INICIAL } from "@/lib/admin/tipos";
+import { animarDesde, tomarPosiciones } from "@/lib/reordenar-animado";
 import type { CategoriaAdmin } from "@/lib/admin/datos";
 
 /**
@@ -33,6 +40,19 @@ export function GestionDeSecciones({
   categorias: CategoriaAdmin[];
 }) {
   const [creando, setCreando] = useState(false);
+  const listaRef = useRef<HTMLUListElement>(null);
+  const posicionesPrevias = useRef(new Map<string, number>());
+
+  // Se guardan las posiciones justo antes de que el servidor devuelva el orden
+  // nuevo, y se anima el salto en cuanto React repinta.
+  const recordarPosiciones = () => {
+    posicionesPrevias.current = tomarPosiciones(listaRef.current);
+  };
+
+  useLayoutEffect(() => {
+    animarDesde(listaRef.current, posicionesPrevias.current);
+    posicionesPrevias.current = new Map();
+  }, [categorias]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -42,13 +62,14 @@ export function GestionDeSecciones({
           platos.
         </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul ref={listaRef} className="flex flex-col gap-2">
           {categorias.map((categoria, indice) => (
             <FilaDeSeccion
               key={categoria.id}
               categoria={categoria}
               esPrimera={indice === 0}
               esUltima={indice === categorias.length - 1}
+              alMover={recordarPosiciones}
             />
           ))}
         </ul>
@@ -125,18 +146,25 @@ function FilaDeSeccion({
   categoria,
   esPrimera,
   esUltima,
+  alMover,
 }: {
   categoria: CategoriaAdmin;
   esPrimera: boolean;
   esUltima: boolean;
+  alMover: () => void;
 }) {
   const [editando, setEditando] = useState(false);
-  const [moviendo, mover] = useTransition();
+  const [moviendo, iniciarMovimiento] = useTransition();
   const [borrando, setBorrando] = useState(false);
+
+  const mover = (direccion: "arriba" | "abajo") => {
+    alMover();
+    iniciarMovimiento(() => void moverCategoria(categoria.id, direccion));
+  };
 
   if (editando) {
     return (
-      <li>
+      <li data-id={categoria.id}>
         <FormularioDeEdicion
           categoria={categoria}
           onListo={() => setEditando(false)}
@@ -146,14 +174,18 @@ function FilaDeSeccion({
   }
 
   return (
-    <li className="border-borde bg-superficie flex flex-col gap-3 rounded-card border p-3">
+    <li
+      data-id={categoria.id}
+      className="border-borde bg-superficie flex flex-col gap-3 rounded-card border p-3 transition-opacity duration-200"
+      style={{ opacity: moviendo ? 0.6 : 1 }}
+    >
       <div className="flex items-center gap-3">
         <div className="flex shrink-0 flex-col">
           <button
             type="button"
             aria-label={`Subir ${categoria.nombre}`}
             disabled={esPrimera || moviendo}
-            onClick={() => mover(() => void moverCategoria(categoria.id, "arriba"))}
+            onClick={() => mover("arriba")}
             className="text-tinta-suave hover:bg-lienzo hover:text-tinta flex size-8 items-center justify-center rounded disabled:opacity-20"
           >
             <ChevronUp className="size-5" aria-hidden />
@@ -162,7 +194,7 @@ function FilaDeSeccion({
             type="button"
             aria-label={`Bajar ${categoria.nombre}`}
             disabled={esUltima || moviendo}
-            onClick={() => mover(() => void moverCategoria(categoria.id, "abajo"))}
+            onClick={() => mover("abajo")}
             className="text-tinta-suave hover:bg-lienzo hover:text-tinta flex size-8 items-center justify-center rounded disabled:opacity-20"
           >
             <ChevronDown className="size-5" aria-hidden />

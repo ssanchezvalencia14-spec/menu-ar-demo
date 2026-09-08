@@ -18,7 +18,7 @@ export function DishDetail({
   restaurante: Restaurante;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 px-5 pt-4 pb-12">
+    <div className="animar-entrada mx-auto flex w-full max-w-xl flex-col gap-6 px-5 pt-4 pb-12">
       <Link
         href={`/${restaurante.slug}`}
         className="text-tinta-suave -ml-2 inline-flex w-fit items-center gap-1.5 rounded-full px-2 py-2 text-base font-semibold"
@@ -32,7 +32,7 @@ export function DishDetail({
 
       <div className="flex flex-col gap-3">
         {plato.destacado && (
-          <Badge variant="destacado" size="md" className="w-fit">
+          <Badge variant="destacado" size="md" className="animar-surgir w-fit">
             <Star className="fill-current" aria-hidden />
             Especialidad de la casa
           </Badge>

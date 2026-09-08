@@ -42,7 +42,8 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "border-borde text-tinta-suave shrink-0 rounded-full border px-5 py-3 text-base font-semibold whitespace-nowrap transition-colors",
+        "border-borde text-tinta-suave shrink-0 rounded-full border px-5 py-3 text-base font-semibold whitespace-nowrap",
+        "transition-[background-color,border-color,color,transform] duration-200 ease-out motion-safe:active:scale-95",
         "data-[state=active]:bg-tinta data-[state=active]:border-tinta data-[state=active]:text-white",
         className,
       )}
@@ -58,7 +59,10 @@ function TabsContent({
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
-      className={cn("outline-none", className)}
+      // Radix desmonta el panel inactivo, asi que no hay salida que animar:
+      // basta con que el panel nuevo entre con un fundido para que el cambio
+      // de categoria no se sienta como un salto.
+      className={cn("animar-aparecer outline-none", className)}
       {...props}
     />
   );

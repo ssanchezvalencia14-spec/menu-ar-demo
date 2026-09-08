@@ -70,6 +70,7 @@ export function MenuView({
                     icono={categoria.icono}
                     restaurante={restaurante}
                     priority={indice < 4}
+                    indice={indice}
                   />
                 </li>
               ))}

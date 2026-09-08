@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Star } from "lucide-react";
+import { Check, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { dejarResena, type EstadoResena } from "@/lib/actions";
@@ -31,9 +31,14 @@ export function FormularioResena({
 
   if (resultado.estado === "ok") {
     return (
-      <p className="border-borde bg-superficie text-tinta rounded-card border px-4 py-5 text-center text-base font-semibold">
-        Gracias por tu resena.
-      </p>
+      <div className="animar-entrada border-borde bg-superficie flex flex-col items-center gap-3 rounded-card border px-4 py-6 text-center">
+        <span className="animar-surgir flex size-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+          <Check className="size-6" aria-hidden />
+        </span>
+        <p className="text-tinta text-base font-semibold">
+          Gracias por tu resena.
+        </p>
+      </div>
     );
   }
 
@@ -68,11 +73,17 @@ export function FormularioResena({
               className="rounded-full p-1"
             >
               <Star
+                // La estrella elegida rebota; las anteriores solo se pintan.
+                // El rebote se re-dispara con la `key`, que cambia cuando pasa
+                // a estar marcada: sin eso la animacion corre una sola vez.
+                key={`${valor}-${valor <= estrellas}`}
                 className={cn(
-                  "size-10 transition-colors",
+                  "size-10 transition-[color,transform] duration-150 ease-out",
+                  "motion-safe:active:scale-90",
                   valor <= marcadas
                     ? "text-destacado fill-current"
                     : "text-borde-fuerte fill-current",
+                  valor === estrellas && "animar-surgir",
                 )}
               />
             </button>
