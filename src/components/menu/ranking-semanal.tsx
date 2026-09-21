@@ -2,40 +2,45 @@ import Link from "next/link";
 import { TrendingUp } from "lucide-react";
 
 import { DishImage } from "@/components/menu/dish-image";
-import { getIconoDePlato, getMasMiradosDeLaSemana } from "@/lib/menu";
+import { getIconoDePlato, getMasMirados } from "@/lib/menu";
 import { formatPrecio } from "@/lib/format";
 import type { Restaurante } from "@/types/menu";
 
 /**
- * "Los mas mirados esta semana".
+ * "Los mas mirados".
  *
  * Componente asincronico: se renderiza dentro de un <Suspense> para que el
  * menu se vea completo sin esperar esta consulta.
  *
  * Mide toques en "Ver en tu mesa", no pedidos reales: no hay integracion con
  * el punto de venta del restaurante. Por eso dice "mirados" y no "pedidos".
+ *
+ * El titulo sale de la ventana que uso la consulta: si los datos son del
+ * ultimo mes y no de la semana, no dice "esta semana".
  */
 export async function RankingSemanal({
   restaurante,
 }: {
   restaurante: Restaurante;
 }) {
-  const top = await getMasMiradosDeLaSemana(restaurante);
+  const { platos, periodo } = await getMasMirados(restaurante);
 
   // Sin datos suficientes no se muestra nada: un ranking de un plato no es
   // un ranking, y un restaurante nuevo no deberia estrenar una seccion vacia.
-  if (top.length === 0) return null;
+  if (platos.length === 0) return null;
 
   return (
     <section className="animar-entrada border-borde border-b px-5 py-6">
       <div className="mx-auto max-w-3xl">
         <h2 className="text-tinta mb-4 flex items-center gap-2 text-lg font-bold">
           <TrendingUp className="size-5" aria-hidden />
-          Los mas mirados esta semana
+          {periodo === "semana"
+            ? "Los mas mirados esta semana"
+            : "Los mas mirados"}
         </h2>
 
         <ol className="flex flex-col gap-2">
-          {top.map(({ plato }, indice) => (
+          {platos.map(({ plato }, indice) => (
             <li key={plato.id} className="animar-entrada-lateral" style={{ animationDelay: `${indice * 70}ms` }}>
               <Link
                 href={`/${restaurante.slug}/plato/${plato.id}`}

@@ -197,28 +197,36 @@ export async function getPrimerSlug(): Promise<string | null> {
 /** Cantidad minima de platos con vistas para que el ranking tenga sentido. */
 export const MINIMO_PARA_RANKING = 3;
 
+/** Ventanas que se prueban, de la mas reciente a la mas amplia. */
+const VENTANAS = [
+  { dias: 7, periodo: "semana" as const },
+  { dias: 30, periodo: "mes" as const },
+];
+
+export type PeriodoDelRanking = "semana" | "mes";
+
+export interface RankingDeVistas {
+  platos: { plato: Plato; vistas: number }[];
+  /** De que ventana salieron los datos. Define el titulo que se muestra. */
+  periodo: PeriodoDelRanking;
+}
+
 /**
- * Los platos mas mirados de los ultimos 7 dias.
+ * Los platos mas mirados, con la ventana de tiempo mas corta que tenga datos.
  *
- * Devuelve lista vacia si no hay al menos MINIMO_PARA_RANKING platos con
- * vistas: un ranking de un solo plato no es un ranking.
+ * Primero mira los ultimos 7 dias. Si no llega a MINIMO_PARA_RANKING platos
+ * distintos, amplia a 30 y avisa el cambio en `periodo` para que el titulo no
+ * diga "esta semana" sobre datos de un mes.
+ *
+ * La escalera existe porque un local recien abierto, o cualquiera despues de
+ * una semana floja, se quedaba sin la seccion justo cuando mas la necesita
+ * para mostrarla. Un ranking de un solo plato sigue sin ser un ranking, asi
+ * que el minimo no se toca: lo que se estira es el periodo.
  */
-export async function getMasMiradosDeLaSemana(
+export async function getMasMirados(
   restaurante: Restaurante,
-): Promise<{ plato: Plato; vistas: number }[]> {
-  const { data, error } = await getSupabasePublico().rpc(
-    "get_weekly_top_items",
-    {
-      p_restaurant_id: restaurante.id,
-      p_days: 7,
-      p_limit: MINIMO_PARA_RANKING,
-    },
-  );
-
-  if (error || !data) return [];
-
-  const filas = data as WeeklyTopRow[];
-  if (filas.length < MINIMO_PARA_RANKING) return [];
+): Promise<RankingDeVistas> {
+  const vacio: RankingDeVistas = { platos: [], periodo: "semana" };
 
   const porId = new Map(
     restaurante.categorias.flatMap((categoria) =>
@@ -226,14 +234,38 @@ export async function getMasMiradosDeLaSemana(
     ),
   );
 
-  return filas
-    .map((fila) => {
-      const plato = porId.get(fila.menu_item_id);
-      return plato ? { plato, vistas: Number(fila.view_count) } : null;
-    })
-    .filter((entrada): entrada is { plato: Plato; vistas: number } =>
-      Boolean(entrada),
+  for (const { dias, periodo } of VENTANAS) {
+    const { data, error } = await getSupabasePublico().rpc(
+      "get_weekly_top_items",
+      {
+        p_restaurant_id: restaurante.id,
+        p_days: dias,
+        p_limit: MINIMO_PARA_RANKING,
+      },
     );
+
+    if (error || !data) return vacio;
+
+    const filas = data as WeeklyTopRow[];
+    if (filas.length < MINIMO_PARA_RANKING) continue;
+
+    // Un plato puede estar en el ranking y haberse pausado despues: si ya no
+    // esta en el menu, no puede aparecer aca.
+    const platos = filas
+      .map((fila) => {
+        const plato = porId.get(fila.menu_item_id);
+        return plato ? { plato, vistas: Number(fila.view_count) } : null;
+      })
+      .filter((entrada): entrada is { plato: Plato; vistas: number } =>
+        Boolean(entrada),
+      );
+
+    if (platos.length < MINIMO_PARA_RANKING) continue;
+
+    return { platos, periodo };
+  }
+
+  return vacio;
 }
 
 /** Icono de la categoria a la que pertenece cada plato del ranking. */

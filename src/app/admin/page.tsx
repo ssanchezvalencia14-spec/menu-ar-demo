@@ -3,7 +3,7 @@ import { PauseCircle, Plus, Star, TrendingUp, UtensilsCrossed } from "lucide-rea
 
 import { Button } from "@/components/ui/button";
 import { exigirRestaurante, getResumen } from "@/lib/admin/datos";
-import { getMasMiradosDeLaSemana, getMenu } from "@/lib/menu";
+import { getMasMirados, getMenu } from "@/lib/menu";
 import { estadoDeApertura } from "@/lib/horarios";
 import { formatPrecio } from "@/lib/format";
 
@@ -13,7 +13,9 @@ export default async function PanelPage() {
 
   // El ranking sale de la misma funcion que usa el menu publico.
   const menu = await getMenu(restaurante.slug);
-  const top = menu ? await getMasMiradosDeLaSemana(menu) : [];
+  const { platos: top, periodo } = menu
+    ? await getMasMirados(menu)
+    : { platos: [], periodo: "semana" as const };
 
   const estado = estadoDeApertura(
     restaurante.horarios,
@@ -75,14 +77,14 @@ export default async function PanelPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-tinta flex items-center gap-2 text-lg font-bold">
           <TrendingUp className="size-5" aria-hidden />
-          Los mas mirados esta semana
+          {periodo === "semana" ? "Los mas mirados esta semana" : "Los mas mirados"}
         </h2>
 
         {top.length === 0 ? (
           <p className="border-borde text-tinta-suave rounded-card border border-dashed p-6 text-center text-sm">
-            Todavia no hay suficientes datos. Aparece cuando al menos tres
-            platos distintos se hayan visto en Realidad Aumentada en los
-            ultimos siete dias.
+            Todavia no hay suficientes datos. La seccion aparece en tu menu
+            cuando al menos tres platos distintos se hayan visto en Realidad
+            Aumentada durante el ultimo mes.
           </p>
         ) : (
           <ol className="flex flex-col gap-2">
