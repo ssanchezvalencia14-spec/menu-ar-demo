@@ -52,6 +52,29 @@ const nextConfig = {
         ]
       : [],
   },
+
+  /**
+   * Tipo MIME de los modelos .usdz.
+   *
+   * Quick Look en iOS **no abre un USDZ servido como application/octet-stream**,
+   * y eso es exactamente lo que le pone Next: el archivo sale de public/, lo
+   * sirve Next (verificado: un 404 bajo /models trae X-Powered-By: Next.js) y su
+   * tabla de tipos no conoce la extension .usdz.
+   *
+   * En Vercel no se notaba porque Vercel lo servia bien por su cuenta. Al pasar
+   * a Hostinger el AR en iPhone quedaba roto, que es la funcion que vende el
+   * producto. Declararlo aca lo hace independiente del hosting.
+   *
+   * El .glb no necesita nada: ya sale como model/gltf-binary.
+   */
+  async headers() {
+    return [
+      {
+        source: "/models/:file(.*\\.usdz)",
+        headers: [{ key: "Content-Type", value: "model/vnd.usdz+zip" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
