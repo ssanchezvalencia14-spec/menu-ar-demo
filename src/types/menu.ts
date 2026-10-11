@@ -1,3 +1,5 @@
+import type { Tema } from "@/lib/tema";
+
 /**
  * Forma de los datos del menu.
  *
@@ -76,6 +78,8 @@ export interface Restaurante {
   direccion: string | null;
   /** Horario de atencion por dia de la semana. */
   horarios: Horarios;
+  /** Apariencia elegida por el restaurante: acento, distribucion, esquinas. */
+  tema: Tema;
   /** Zona IANA, ej. "America/Bogota". Define contra que reloj se abre y cierra. */
   zonaHoraria: string;
   /** Codigo ISO de la moneda para formatear precios. */

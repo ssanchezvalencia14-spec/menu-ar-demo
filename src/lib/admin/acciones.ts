@@ -7,6 +7,8 @@ import { DIAS, aMinutos } from "@/lib/horarios";
 import { exigirRestaurante, exigirSesion } from "@/lib/admin/datos";
 import type { Resultado } from "@/lib/admin/tipos";
 import type { Horarios } from "@/types/menu";
+import { ACENTOS, DISTRIBUCIONES, ESQUINAS, TEMA_POR_DEFECTO } from "@/lib/tema";
+import type { Acento, Distribucion, Esquinas } from "@/lib/tema";
 
 /**
  * Escrituras del panel.
@@ -127,6 +129,57 @@ export async function guardarHorarios(
 
   refrescar(restaurante.slug, "/admin/horarios");
   return { estado: "ok", mensaje: "Horarios guardados." };
+}
+
+// -------------------------------------------------------- Apariencia ---
+
+/**
+ * Guarda el aspecto del menu.
+ *
+ * Cada valor se comprueba contra la lista de opciones antes de escribir. El
+ * formulario solo ofrece las validas, pero el formulario no es la frontera de
+ * confianza: esto llega por HTTP y cualquiera puede mandar otra cosa. Un valor
+ * invalido en la columna no rompe el menu (normalizarTema lo descarta al
+ * leerlo), pero deja al restaurante con un ajuste que no entiende por que no
+ * se aplica.
+ */
+export async function guardarApariencia(
+  _anterior: Resultado,
+  formData: FormData,
+): Promise<Resultado> {
+  const { supabase } = await exigirSesion();
+  const restaurante = await exigirRestaurante();
+
+  const elegir = <T extends string>(
+    campo: string,
+    opciones: Record<string, unknown>,
+    porDefecto: T,
+  ): T => {
+    const valor = String(formData.get(campo) ?? "");
+    return valor in opciones ? (valor as T) : porDefecto;
+  };
+
+  const tema = {
+    acento: elegir<Acento>("acento", ACENTOS, TEMA_POR_DEFECTO.acento),
+    distribucion: elegir<Distribucion>(
+      "distribucion",
+      DISTRIBUCIONES,
+      TEMA_POR_DEFECTO.distribucion,
+    ),
+    esquinas: elegir<Esquinas>("esquinas", ESQUINAS, TEMA_POR_DEFECTO.esquinas),
+  };
+
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ tema })
+    .eq("id", restaurante.id);
+
+  if (error) {
+    return { estado: "error", mensaje: "No pude guardar la apariencia." };
+  }
+
+  refrescar(restaurante.slug, "/admin/apariencia");
+  return { estado: "ok", mensaje: "Apariencia guardada. Mira tu menu." };
 }
 
 // -------------------------------------------------------- Categorias ---

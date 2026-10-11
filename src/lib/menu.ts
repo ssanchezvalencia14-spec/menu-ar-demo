@@ -1,6 +1,7 @@
 import "server-only";
 
 import { normalizarHorarios } from "@/lib/horarios";
+import { normalizarTema } from "@/lib/tema";
 import { getSupabasePublico } from "@/lib/supabase/servidor";
 import type {
   CategoryRow,
@@ -31,6 +32,16 @@ const SIN_CALIFICAR: Calificacion = { promedio: 0, cantidad: 0 };
  * permite que el GRANT por columna funcione.
  */
 const COLUMNAS_PUBLICAS_DEL_RESTAURANTE =
+  "id, slug, name, description, logo_url, address, hours, tema, timezone, currency, locale, created_at";
+
+/**
+ * Las mismas columnas menos las que agrego una migracion reciente.
+ *
+ * Es el plan B de getMenu cuando el codigo esta por delante de la base. Al
+ * agregar una columna nueva a la lista de arriba, NO agregarla aca: la gracia
+ * es justamente que esta lista solo tenga lo que existe desde siempre.
+ */
+const COLUMNAS_MINIMAS_DEL_RESTAURANTE =
   "id, slug, name, description, logo_url, address, hours, timezone, currency, locale, created_at";
 
 export function aPlato(fila: MenuItemRow, calificacion: Calificacion): Plato {
@@ -61,6 +72,7 @@ export function aRestaurante(
     logo: fila.logo_url,
     direccion: fila.address,
     horarios: normalizarHorarios(fila.hours),
+    tema: normalizarTema(fila.tema),
     zonaHoraria: fila.timezone,
     moneda: fila.currency,
     locale: fila.locale,
@@ -96,18 +108,44 @@ type FilaMenuAnidada = RestaurantRow & {
   categories: (CategoryRow & { menu_items: MenuItemRow[] })[];
 };
 
+/**
+ * Codigo de Postgres para "esa columna no existe".
+ *
+ * Aparece cuando el codigo ya se desplego y la migracion todavia no corrio.
+ * Siempre hay una ventana entre las dos cosas, y tambien pasa si alguien
+ * revierte la base sin revertir el despliegue.
+ */
+const COLUMNA_INEXISTENTE = "42703";
+
 /** Menu completo de un restaurante, solo con lo que el comensal debe ver. */
 export async function getMenu(slug: string): Promise<Restaurante | null> {
-  const { data, error } = await getSupabasePublico()
-    .from("restaurants")
-    .select(`${COLUMNAS_PUBLICAS_DEL_RESTAURANTE}, categories(*, menu_items(*))`)
-    .eq("slug", slug)
-    .maybeSingle();
+  const consultar = (columnas: string) =>
+    getSupabasePublico()
+      .from("restaurants")
+      .select(`${columnas}, categories(*, menu_items(*))`)
+      .eq("slug", slug)
+      .maybeSingle();
+
+  let { data, error } = await consultar(COLUMNAS_PUBLICAS_DEL_RESTAURANTE);
+
+  // Una columna de apariencia que falta no puede tumbar el menu de todos los
+  // restaurantes. Se reintenta sin ella y el menu sale con el aspecto por
+  // defecto, que es una degradacion que el comensal ni nota.
+  if (error?.code === COLUMNA_INEXISTENTE) {
+    console.error(
+      `Falta una columna en restaurants (${error.message}). ` +
+        "El menu se sirve con la apariencia por defecto. Corre las migraciones pendientes.",
+    );
+    ({ data, error } = await consultar(COLUMNAS_MINIMAS_DEL_RESTAURANTE));
+  }
 
   if (error) throw new Error(`No pude leer el menu: ${error.message}`);
   if (!data) return null;
 
-  const fila = data as FilaMenuAnidada;
+  // Doble conversion a proposito: al pasar las columnas como variable en vez
+  // de cadena literal, supabase-js ya no puede inferir la forma del resultado.
+  // La forma real la garantiza COLUMNAS_PUBLICAS_DEL_RESTAURANTE.
+  const fila = data as unknown as FilaMenuAnidada;
 
   const idsDePlatos = fila.categories.flatMap((categoria) =>
     categoria.menu_items.filter((p) => p.is_available).map((p) => p.id),

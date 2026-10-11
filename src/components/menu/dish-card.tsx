@@ -26,6 +26,10 @@ export function DishCard({
   /** Posicion en la grilla: escalona la entrada. */
   indice?: number;
 }) {
+  // La distribucion la elige el restaurante desde /admin/apariencia.
+  // "lista" pone la foto chica al costado: entran mas platos en pantalla, que
+  // es lo que conviene a una carta larga o a un local sin fotos propias.
+  const enLista = restaurante.tema.distribucion === "lista";
   return (
     <Link
       href={`/${restaurante.slug}/plato/${plato.id}`}
@@ -37,7 +41,8 @@ export function DishCard({
     >
       <Card
         className={cn(
-          "flex h-full flex-col",
+          "flex h-full",
+          enLista ? "flex-row items-stretch" : "flex-col",
           // 180 ms: se siente instantaneo pero no seco. Solo transform y
           // sombra, que no obligan al navegador a recalcular el layout.
           "transition-[transform,box-shadow] duration-[180ms] ease-out",
@@ -46,12 +51,17 @@ export function DishCard({
           "motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98]",
         )}
       >
-        <div className="relative aspect-4/3 w-full shrink-0">
+        <div
+          className={cn(
+            "relative shrink-0",
+            enLista ? "aspect-square w-28 sm:w-32" : "aspect-4/3 w-full",
+          )}
+        >
           <DishImage
             plato={plato}
             icono={icono}
             priority={priority}
-            sizes="(min-width: 640px) 33vw, 50vw"
+            sizes={enLista ? "128px" : "(min-width: 640px) 33vw, 50vw"}
           />
           {plato.destacado && (
             <span
@@ -65,11 +75,21 @@ export function DishCard({
         </div>
 
         <div className="flex flex-1 flex-col gap-1 p-4">
-          <h3 className="text-tinta flex-1 text-lg leading-tight font-semibold text-balance">
+          <h3
+            className={cn(
+              "text-tinta flex-1 leading-tight font-semibold text-balance",
+              enLista ? "text-base" : "text-lg",
+            )}
+          >
             {plato.nombre}
           </h3>
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <p className="text-tinta text-xl font-bold tabular-nums">
+            <p
+              className={cn(
+                "text-tinta font-bold tabular-nums",
+                enLista ? "text-lg" : "text-xl",
+              )}
+            >
               {formatPrecio(
                 plato.precio,
                 restaurante.moneda,

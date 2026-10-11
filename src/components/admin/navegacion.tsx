@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Clock,
   LayoutGrid,
+  Palette,
   Store,
   UtensilsCrossed,
   LayoutDashboard,
@@ -17,6 +18,7 @@ const SECCIONES = [
   { href: "/admin/platos", etiqueta: "Platos", icono: UtensilsCrossed },
   { href: "/admin/secciones", etiqueta: "Secciones", icono: LayoutGrid },
   { href: "/admin/horarios", etiqueta: "Horarios", icono: Clock },
+  { href: "/admin/apariencia", etiqueta: "Apariencia", icono: Palette },
   { href: "/admin/restaurante", etiqueta: "Mi local", icono: Store },
 ];
 

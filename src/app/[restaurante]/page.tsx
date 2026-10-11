@@ -8,6 +8,7 @@ import { MenuView } from "@/components/menu/menu-view";
 import { RankingSemanal } from "@/components/menu/ranking-semanal";
 import { RestaurantHeader } from "@/components/menu/restaurant-header";
 import { getMenu } from "@/lib/menu";
+import { variablesDelTema } from "@/lib/tema";
 
 export async function generateMetadata({
   params,
@@ -30,7 +31,10 @@ export default async function MenuPage({
   if (!restaurante) notFound();
 
   return (
-    <>
+    /* El tema se inyecta como variables CSS en un contenedor y NO en :root.
+       El mismo servidor sirve a todos los restaurantes: si se tocara algo
+       global, el acento de un local se filtraria al de otro al navegar. */
+    <div style={variablesDelTema(restaurante.tema)} className="contents">
       <RestaurantHeader restaurante={restaurante} />
 
       {/* Fuera del flujo de carga del menu: si la consulta del ranking tarda,
@@ -51,6 +55,6 @@ export default async function MenuPage({
           Codigo QR para las mesas
         </Link>
       </footer>
-    </>
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 
 import { normalizarHorarios } from "@/lib/horarios";
+import { normalizarTema, type Tema } from "@/lib/tema";
 import { getSupabaseSesion } from "@/lib/supabase/servidor";
 import type { CategoryRow, MenuItemRow, RestaurantRow } from "@/types/database";
 import type { Horarios } from "@/types/menu";
@@ -26,6 +27,8 @@ export interface RestauranteAdmin {
   logo: string | null;
   direccion: string | null;
   horarios: Horarios;
+  /** Apariencia del menu publico. Se edita en /admin/apariencia. */
+  tema: Tema;
   zonaHoraria: string;
   moneda: string;
   locale: string;
@@ -88,6 +91,7 @@ export async function getRestauranteDelDueno(): Promise<RestauranteAdmin | null>
     logo: fila.logo_url,
     direccion: fila.address,
     horarios: normalizarHorarios(fila.hours),
+    tema: normalizarTema(fila.tema),
     zonaHoraria: fila.timezone,
     moneda: fila.currency,
     locale: fila.locale,

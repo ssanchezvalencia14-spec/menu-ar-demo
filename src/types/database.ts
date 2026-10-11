@@ -17,6 +17,8 @@ export interface RestaurantRow {
   address: string | null;
   /** jsonb sin garantias de forma: pasarlo por normalizarHorarios(). */
   hours: unknown;
+  /** jsonb sin garantias de forma: pasarlo por normalizarTema(). */
+  tema: unknown;
   timezone: string;
   /** OBSOLETO desde la migracion 0002. El horario real vive en `hours`. */
   schedule: string | null;

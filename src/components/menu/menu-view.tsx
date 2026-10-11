@@ -37,7 +37,7 @@ export function MenuView({
 
   return (
     <Tabs value={activa} onValueChange={setActiva} className="flex-1">
-      <div className="bg-lienzo/95 border-borde sticky top-0 z-10 border-b backdrop-blur">
+      <div className="material-barra sticky top-0 z-10">
         <TabsList
           ref={listaRef}
           aria-label="Categorias del menu"
@@ -62,7 +62,13 @@ export function MenuView({
               Todavia no hay platos en esta categoria.
             </p>
           ) : (
-            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <ul
+              className={
+                restaurante.tema.distribucion === "lista"
+                  ? "flex flex-col gap-3"
+                  : "grid grid-cols-2 gap-4 sm:grid-cols-3"
+              }
+            >
               {categoria.platos.map((plato, indice) => (
                 <li key={plato.id}>
                   <DishCard
