@@ -44,7 +44,25 @@ export default async function MenuPage({
         <RankingSemanal restaurante={restaurante} />
       </Suspense>
 
-      <MenuView restaurante={restaurante} categorias={restaurante.categorias} />
+      {restaurante.categorias.length === 0 ? (
+        /* Un restaurante recien creado no tiene secciones todavia. Sin esto la
+           pagina quedaba con el nombre y nada mas, y lo primero que ve un
+           cliente nuevo al abrir SU menu es una pantalla en blanco que parece
+           rota. */
+        <section className="mx-auto w-full max-w-3xl px-5 py-16 text-center">
+          <p className="text-tinta text-lg font-semibold">
+            Este menu todavia no tiene platos.
+          </p>
+          <p className="text-tinta-suave mt-1 text-sm">
+            Vuelve en un rato: el restaurante lo esta preparando.
+          </p>
+        </section>
+      ) : (
+        <MenuView
+          restaurante={restaurante}
+          categorias={restaurante.categorias}
+        />
+      )}
 
       <footer className="mx-auto w-full max-w-3xl px-5 pt-2 pb-10">
         <Link

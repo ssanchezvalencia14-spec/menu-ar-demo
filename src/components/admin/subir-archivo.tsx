@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import {
   Camera,
@@ -69,7 +69,20 @@ export function SubirArchivo({
   const [error, setError] = useState<string | null>(null);
   const [pegandoEnlace, setPegandoEnlace] = useState(false);
   const [camaraAbierta, setCamaraAbierta] = useState(false);
+  const [forzadoAnterior, setForzadoAnterior] = useState(valorForzado);
   const entradaDeArchivo = useRef<HTMLInputElement>(null);
+
+  // El convertidor de .glb a .usdz escribe el resultado aca desde afuera.
+  //
+  // Se ajusta DURANTE el render y no en un useEffect. Un efecto que llama a
+  // setState provoca un render extra: el usuario llega a ver el campo vacio
+  // un instante antes de que aparezca el archivo. Ademas es la forma que
+  // documenta React para reaccionar al cambio de una prop, y la que exige la
+  // regla de lint react-hooks/set-state-in-effect.
+  if (valorForzado !== forzadoAnterior) {
+    setForzadoAnterior(valorForzado);
+    if (valorForzado != null) setValor(valorForzado);
+  }
 
   // Un solo lugar donde cambia la URL, para que el padre siempre se entere.
   // Antes `setValor` se llamaba desde tres sitios distintos y agregar un aviso
@@ -78,11 +91,6 @@ export function SubirArchivo({
     setValor(nueva);
     onCambio?.(nueva);
   }
-
-  // El convertidor de .glb a .usdz escribe el resultado aca desde afuera.
-  useEffect(() => {
-    if (valorForzado != null) setValor(valorForzado);
-  }, [valorForzado]);
 
   // getUserMedia solo existe en contexto seguro. Si el panel se abrio por IP de
   // red local el boton no serviria, asi que directamente no se ofrece.
