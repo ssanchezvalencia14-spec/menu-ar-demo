@@ -45,3 +45,9 @@ next-env.d.ts
 
 # Ruido de herramientas locales
 .claude-flow
+
+# Credenciales locales de prueba: nunca al repositorio
+credenciales-de-prueba.txt
+
+# Paquete de fuentes que se genera para desplegar en Hostinger
+menup-src.zip

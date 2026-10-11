@@ -44,6 +44,74 @@
     outline: 2px solid var(--color-tinta);
     outline-offset: 2px;
   }
+
+  /* ------------------------------------------------- Tipografia optica ---
+
+    El tracking (espaciado entre letras) es especifico del tamano: NO existe
+    un valor unico correcto. A medida que el texto crece, las letras se leen
+    demasiado separadas, asi que los titulos piden tracking NEGATIVO; el texto
+    chico pide un poco positivo para no empastarse. Dejar el valor por defecto
+    en todo, que es lo que habia, esta mal en los extremos.
+
+    El interlineado va al reves: ajustado en titulos grandes, holgado en texto
+    corrido. Por eso cada nivel define los dos juntos, no solo el tamano.
+
+    Se aplica a los elementos semanticos y no a utilidades de Tailwind para
+    que valga en todo el proyecto sin tocar cada componente.
+  */
+  h1 {
+    letter-spacing: -0.021em;
+    line-height: 1.1;
+  }
+
+  h2 {
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  h3 {
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  /* Inter es variable y trae eje optico: que el navegador lo use. */
+  body {
+    font-optical-sizing: auto;
+  }
+
+  /* Los precios y contadores van en cifras de ancho fijo para que no bailen
+     al cambiar, y con tracking apenas positivo: los numeros chicos pegados
+     se confunden entre si. */
+  .tabular-nums {
+    letter-spacing: 0.01em;
+  }
+}
+
+/*
+  Material de la barra de secciones.
+
+  Antes era `bg-lienzo/95` con `backdrop-blur`: a 95% de opacidad el desenfoque
+  practicamente no se ve, asi que pagaba el costo del filtro sin el efecto. Una
+  barra flotante tiene que dejar entrever el contenido que pasa por debajo, que
+  es lo que comunica "esto flota sobre el menu" en vez de "esto es una franja".
+
+  La saturacion compensa el lavado que produce el desenfoque sobre los colores
+  de las fotos de los platos.
+
+  El borde inferior es muy tenue a proposito: hace de filo del material y no de
+  linea divisoria dura.
+
+  Las preferencias de transparencia reducida y contraste alto lo vuelven opaco
+  mas abajo en este archivo.
+*/
+@utility material-barra {
+  background-color: color-mix(in srgb, var(--color-lienzo) 72%, transparent);
+  /* Solo la propiedad estandar: Lightning CSS (el compilador de Tailwind v4)
+     agrega el prefijo -webkit- segun los navegadores objetivo. Si se escriben
+     las dos a mano las deduplica y descarta la SIN prefijo, que es justamente
+     la unica que entiende Firefox. */
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-borde) 60%, transparent);
 }
 
 @utility ocultar-scrollbar {
@@ -153,6 +221,34 @@
 
   html {
     scroll-behavior: auto;
+  }
+}
+
+/*
+  El movimiento no es la unica preferencia del sistema que hay que respetar, y
+  antes solo se contemplaba esa. Las otras dos tienen usuarios reales:
+
+  - Transparencia reducida: el desenfoque de fondo marea o dificulta la lectura
+    a parte de las personas con baja vision. La barra pasa a ser opaca.
+  - Contraste alto: se pide un fondo casi solido con un borde definido, porque
+    un borde tenue sobre un fondo tenue directamente no se ve.
+*/
+@media (prefers-reduced-transparency: reduce) {
+  .material-barra {
+    background-color: var(--color-lienzo);
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .material-barra {
+    background-color: var(--color-lienzo);
+    backdrop-filter: none;
+    border-color: var(--color-tinta);
+  }
+
+  :focus-visible {
+    outline-width: 3px;
   }
 }
 

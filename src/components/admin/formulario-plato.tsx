@@ -15,6 +15,7 @@ import {
 } from "@/components/admin/campos";
 import { BotonDeBorrado } from "@/components/admin/confirmar";
 import { EntradaDePrecio } from "@/components/admin/entrada-precio";
+import { ModelosDelPlato } from "@/components/admin/modelos-del-plato";
 import { SubirArchivo } from "@/components/admin/subir-archivo";
 import {
   crearPlato,
@@ -120,6 +121,7 @@ export function FormularioDePlato({
         restauranteId={restauranteId}
         valorInicial={plato?.imagen ?? null}
         esImagen
+        permitirCamara
       />
 
       {/* Casi ningun plato arranca con modelo 3D, asi que va plegado: si
@@ -147,36 +149,11 @@ export function FormularioDePlato({
           </span>
         </summary>
 
-        <div className="flex flex-col gap-5 px-4 pb-4">
-          <p className="text-tinta-suave text-xs">
-            Se necesitan dos archivos, uno para cada tipo de celular. Si falta
-            el de iPhone, en esos telefonos el boton no abre la camara.
-          </p>
-
-          <SubirArchivo
-            nombreDelCampo="modeloGlb"
-            etiqueta="Archivo para Android"
-            extensiones={[".glb"]}
-            carpeta="modelos"
-            restauranteId={restauranteId}
-            valorInicial={plato?.modeloGlb ?? null}
-          />
-
-          <SubirArchivo
-            nombreDelCampo="modeloUsdz"
-            etiqueta="Archivo para iPhone"
-            extensiones={[".usdz"]}
-            carpeta="modelos"
-            restauranteId={restauranteId}
-            valorInicial={plato?.modeloUsdz ?? null}
-          />
-
-          <p className="text-tinta-tenue text-xs">
-            Importante: el modelo tiene que estar hecho al tamano real del
-            plato. Si es mas grande, en el celular no se apoya sobre la mesa
-            sino en el piso.
-          </p>
-        </div>
+        <ModelosDelPlato
+          restauranteId={restauranteId}
+          glbInicial={plato?.modeloGlb ?? null}
+          usdzInicial={plato?.modeloUsdz ?? null}
+        />
       </details>
 
       <div className="grid gap-3 sm:grid-cols-2">

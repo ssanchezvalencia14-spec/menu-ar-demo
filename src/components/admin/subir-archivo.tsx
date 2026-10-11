@@ -1,10 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Check, ImagePlus, Link2, LoaderCircle, Upload, X } from "lucide-react";
+import {
+  Camera,
+  Check,
+  ImagePlus,
+  Link2,
+  LoaderCircle,
+  Upload,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CamaraPlato } from "@/components/admin/camara-plato";
 import { Entrada } from "@/components/admin/campos";
 import { getSupabaseNavegador } from "@/lib/supabase/navegador";
 
@@ -33,6 +42,9 @@ export function SubirArchivo({
   restauranteId,
   valorInicial,
   esImagen = false,
+  permitirCamara = false,
+  onCambio,
+  valorForzado,
 }: {
   nombreDelCampo: string;
   etiqueta: string;
@@ -45,12 +57,40 @@ export function SubirArchivo({
   valorInicial: string | null;
   /** Si es imagen se muestra la miniatura; si no, solo el estado "cargado". */
   esImagen?: boolean;
+  /** Agrega el boton para tomar la foto con la camara del propio telefono. */
+  permitirCamara?: boolean;
+  /** Avisa al padre cada vez que cambia la URL, para que pueda reaccionar. */
+  onCambio?: (url: string) => void;
+  /** URL impuesta desde afuera (ej: el .usdz que genera el convertidor). */
+  valorForzado?: string | null;
 }) {
   const [valor, setValor] = useState(valorInicial ?? "");
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pegandoEnlace, setPegandoEnlace] = useState(false);
+  const [camaraAbierta, setCamaraAbierta] = useState(false);
   const entradaDeArchivo = useRef<HTMLInputElement>(null);
+
+  // Un solo lugar donde cambia la URL, para que el padre siempre se entere.
+  // Antes `setValor` se llamaba desde tres sitios distintos y agregar un aviso
+  // en cada uno es justo como se olvida uno.
+  function aplicarValor(nueva: string) {
+    setValor(nueva);
+    onCambio?.(nueva);
+  }
+
+  // El convertidor de .glb a .usdz escribe el resultado aca desde afuera.
+  useEffect(() => {
+    if (valorForzado != null) setValor(valorForzado);
+  }, [valorForzado]);
+
+  // getUserMedia solo existe en contexto seguro. Si el panel se abrio por IP de
+  // red local el boton no serviria, asi que directamente no se ofrece.
+  const hayCamara =
+    permitirCamara &&
+    typeof window !== "undefined" &&
+    window.isSecureContext &&
+    Boolean(navigator.mediaDevices?.getUserMedia);
 
   async function subir(archivo: File) {
     setError(null);
@@ -94,7 +134,7 @@ export function SubirArchivo({
       data: { publicUrl },
     } = supabase.storage.from("menu").getPublicUrl(nombre);
 
-    setValor(publicUrl);
+    aplicarValor(publicUrl);
     setSubiendo(false);
   }
 
@@ -146,6 +186,19 @@ export function SubirArchivo({
             {esImagen ? "" : "Archivo cargado"}
           </span>
 
+          {hayCamara && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Tomar una foto nueva con la camara"
+              onClick={() => setCamaraAbierta(true)}
+              disabled={subiendo}
+            >
+              <Camera aria-hidden />
+            </Button>
+          )}
+
           <Button
             type="button"
             variant="outline"
@@ -160,13 +213,29 @@ export function SubirArchivo({
             variant="ghost"
             size="icon"
             aria-label={`Quitar ${etiqueta}`}
-            onClick={() => setValor("")}
+            onClick={() => aplicarValor("")}
             className="text-destacado"
           >
             <X aria-hidden />
           </Button>
         </div>
       ) : (
+        <div className="flex flex-col gap-2">
+          {/* La camara va primero y como accion principal: el caso normal es
+              un mesero parado al lado del plato con el telefono en la mano.
+              Buscar un archivo en la galeria es el camino secundario. */}
+          {hayCamara && !subiendo && (
+            <Button
+              type="button"
+              size="md"
+              onClick={() => setCamaraAbierta(true)}
+              className="w-full"
+            >
+              <Camera aria-hidden />
+              Tomar la foto ahora
+            </Button>
+          )}
+
         <button
           type="button"
           onClick={() => entradaDeArchivo.current?.click()}
@@ -194,6 +263,7 @@ export function SubirArchivo({
             </>
           )}
         </button>
+        </div>
       )}
 
       {error && (
@@ -210,7 +280,7 @@ export function SubirArchivo({
       {pegandoEnlace ? (
         <Entrada
           value={valor}
-          onChange={(e) => setValor(e.target.value)}
+          onChange={(e) => aplicarValor(e.target.value)}
           placeholder="https://..."
           aria-label={`Enlace de ${etiqueta}`}
           className="mt-1 text-sm"
@@ -225,6 +295,16 @@ export function SubirArchivo({
           <Link2 className="size-3" aria-hidden />
           o pegar un enlace
         </button>
+      )}
+
+      {camaraAbierta && (
+        <CamaraPlato
+          onCerrar={() => setCamaraAbierta(false)}
+          onListo={(archivo) => {
+            setCamaraAbierta(false);
+            void subir(archivo);
+          }}
+        />
       )}
     </div>
   );
