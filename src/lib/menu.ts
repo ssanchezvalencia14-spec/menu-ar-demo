@@ -117,27 +117,41 @@ type FilaMenuAnidada = RestaurantRow & {
  */
 const COLUMNA_INEXISTENTE = "42703";
 
+/**
+ * Corre una consulta con las columnas completas y, si la base todavia no tiene
+ * alguna, la reintenta con las minimas.
+ *
+ * Esta envuelto en una funcion y no copiado en cada consulta por un motivo
+ * concreto: la primera version solo protegia a getMenu, y getPlato quedo sin
+ * red usando la MISMA lista de columnas. El menu aguantaba y el detalle del
+ * plato respondia 500. Cualquier consulta nueva que use la lista completa
+ * tiene que pasar por aca.
+ */
+async function conRespaldoDeColumnas<T>(
+  consultar: (columnas: string) => PromiseLike<{
+    data: T | null;
+    error: { code?: string; message: string } | null;
+  }>,
+) {
+  const primera = await consultar(COLUMNAS_PUBLICAS_DEL_RESTAURANTE);
+  if (primera.error?.code !== COLUMNA_INEXISTENTE) return primera;
+
+  console.error(
+    `Falta una columna en restaurants (${primera.error.message}). ` +
+      "Se sirve con la apariencia por defecto. Corre las migraciones pendientes.",
+  );
+  return consultar(COLUMNAS_MINIMAS_DEL_RESTAURANTE);
+}
+
 /** Menu completo de un restaurante, solo con lo que el comensal debe ver. */
 export async function getMenu(slug: string): Promise<Restaurante | null> {
-  const consultar = (columnas: string) =>
+  const { data, error } = await conRespaldoDeColumnas((columnas) =>
     getSupabasePublico()
       .from("restaurants")
       .select(`${columnas}, categories(*, menu_items(*))`)
       .eq("slug", slug)
-      .maybeSingle();
-
-  let { data, error } = await consultar(COLUMNAS_PUBLICAS_DEL_RESTAURANTE);
-
-  // Una columna de apariencia que falta no puede tumbar el menu de todos los
-  // restaurantes. Se reintenta sin ella y el menu sale con el aspecto por
-  // defecto, que es una degradacion que el comensal ni nota.
-  if (error?.code === COLUMNA_INEXISTENTE) {
-    console.error(
-      `Falta una columna en restaurants (${error.message}). ` +
-        "El menu se sirve con la apariencia por defecto. Corre las migraciones pendientes.",
-    );
-    ({ data, error } = await consultar(COLUMNAS_MINIMAS_DEL_RESTAURANTE));
-  }
+      .maybeSingle(),
+  );
 
   if (error) throw new Error(`No pude leer el menu: ${error.message}`);
   if (!data) return null;
@@ -188,16 +202,18 @@ export async function getPlato(
   categoria: Categoria;
   restaurante: Restaurante;
 } | null> {
-  const { data, error } = await getSupabasePublico()
-    .from("menu_items")
-    .select(`*, categories(*), restaurants(${COLUMNAS_PUBLICAS_DEL_RESTAURANTE})`)
-    .eq("id", platoId)
-    .maybeSingle();
+  const { data, error } = await conRespaldoDeColumnas((columnas) =>
+    getSupabasePublico()
+      .from("menu_items")
+      .select(`*, categories(*), restaurants(${columnas})`)
+      .eq("id", platoId)
+      .maybeSingle(),
+  );
 
   if (error) throw new Error(`No pude leer el plato: ${error.message}`);
   if (!data) return null;
 
-  const fila = data as FilaPlatoAnidada;
+  const fila = data as unknown as FilaPlatoAnidada;
   // El id del plato es unico, pero la URL tambien nombra al restaurante:
   // si no coinciden, la URL esta mal armada y corresponde un 404.
   if (fila.restaurants.slug !== slug) return null;
