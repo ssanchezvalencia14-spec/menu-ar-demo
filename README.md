@@ -4,25 +4,27 @@ Menu digital de restaurante donde cada plato se puede ver en tamano real sobre
 la mesa, desde el navegador del celular y sin instalar ninguna app. Con
 resenas de clientes, ranking semanal y especialidad de la casa.
 
-**Estado**: Partes 1 (menu + AR + QR), 2 (Supabase + resenas + ranking) y 4
-(panel de administracion) terminadas. El restaurante administra su menu solo,
-en `/admin`. Ya no hace falta tocar Supabase para operar un cliente.
+**Estado**: terminado y en produccion. Menu publico con AR, resenas, ranking,
+panel de administracion, escaneo de platos y apariencia configurable por
+restaurante.
 
-**En produccion**: https://menu-ar-demo-ten.vercel.app/demo
-(proyecto `utah1/menu-ar-demo` en Vercel, base `kganvantvhiurdxfuakv`).
-Esa es la URL que hay que poner en el QR: tiene HTTPS, que es requisito para
-que el AR abra en iPhone.
+**En produccion**: https://dodgerblue-leopard-801353.hostingersite.com/demo
+Hosting compartido de Hostinger, cuenta `u945139586`.
+Base de datos: proyecto de Supabase `hltqbwqvaolwzdnnxjxx`.
+
+Esa es la URL que va en el QR: tiene HTTPS, que es requisito para que el AR
+abra en iPhone.
 
 Repositorio: https://github.com/ssanchezvalencia14-spec/menu-ar-demo (privado).
 
-Para publicar cambios alcanza con `git push`: el proyecto de Vercel esta
-conectado a ese repositorio y cada push a `main` dispara un deploy a
-produccion. Tambien sirve `npx vercel deploy --prod --yes` para publicar sin
-pasar por Git.
+### Como se publica
 
-Cuidado al correr `vercel link` de nuevo en esta carpeta: detecta el remoto y
-puede reconectar el proyecto al repositorio equivocado. Se revisa con
-`vercel git disconnect` y `vercel git connect`.
+El despliegue a Hostinger es **manual**, no por push. Ver "Desplegar" mas abajo.
+
+**Cuidado**: el repositorio sigue conectado a un proyecto de Vercel, asi que un
+`git push` a `main` dispara un deploy ahi (https://menu-ar-demo-ten.vercel.app).
+Ese despliegue apunta a la misma base. Si no se quiere mantener, hay que
+desconectarlo en Vercel.
 
 ---
 
@@ -37,12 +39,31 @@ Plan free, region la mas cercana.
 
 En el dashboard, **SQL Editor** > New query, y ejecutar en orden:
 
-1. `supabase/migrations/0001_init.sql`: tablas, indices, vista de
-   calificaciones, funcion del ranking y lectura publica.
-2. `supabase/migrations/0002_panel.sql`: dueno del restaurante, horarios,
-   zona horaria, bucket de archivos y politicas de escritura.
-3. `supabase/migrations/0003_quitar_adopcion_automatica.sql`: quita un trigger
-   temporal que 0002 dejaba armado.
+Hay que correrlas **en orden**. Cada una depende de la anterior:
+
+1. `0001_init.sql`: tablas, indices, vista de calificaciones, funcion del
+   ranking y lectura publica.
+2. `0002_panel.sql`: dueno del restaurante, horarios, zona horaria, bucket de
+   archivos y politicas de escritura.
+3. `0003_quitar_adopcion_automatica.sql`: quita un trigger temporal que 0002
+   dejaba armado y que le regalaba los restaurantes sin dueno al proximo
+   usuario que se registrara.
+4. `0004_cerrar_fugas_entre_restaurantes.sql`: oculta los platos pausados del
+   publico y limita los tipos de archivo del bucket.
+5. `0005_ocultar_owner_user_id.sql`: quita el SELECT de tabla a `anon` y lo
+   reemplaza por permisos **columna por columna**.
+6. `0006_apariencia_del_menu.sql`: columna `tema` y su permiso de lectura.
+
+**Consecuencia de la 0005 que hay que tener presente**: desde esa migracion, una
+columna nueva en `restaurants` **es invisible para el publico** hasta que se la
+agregue explicitamente al `grant select (...)`. No da error: simplemente el dato
+no llega. Toda migracion que agregue una columna publica tiene que incluir su
+GRANT, como hace la 0006.
+
+Ademas, las consultas publicas **tienen que pedir columnas explicitas**:
+PostgREST traduce `select=*` a un `SELECT *`, que exige permiso sobre la tabla
+entera y falla. Por eso existe `COLUMNAS_PUBLICAS_DEL_RESTAURANTE` en
+`src/lib/menu.ts`.
 
 ### 3. Configurar las variables
 
@@ -91,6 +112,8 @@ El restaurante entra en `/login` y administra todo desde ahi.
 | `/admin/platos/nuevo` | alta: foto, precio, seccion, modelos 3D |
 | `/admin/secciones` | crear, renombrar, reordenar y eliminar secciones |
 | `/admin/horarios` | horario por dia, con dias cerrados |
+| `/admin/apariencia` | color, distribucion y esquinas del menu, con vista previa |
+| `/admin/apariencia` | color, distribucion y esquinas del menu, con vista previa |
 | `/admin/restaurante` | nombre, logo, direccion, URL del menu, zona horaria |
 | `/admin/bienvenida` | primer ingreso, cuando la cuenta todavia no tiene local |
 
@@ -196,7 +219,7 @@ Se calcula con `restaurants.hours` (jsonb, una franja por dia) y
 
 Dos cosas que suelen salir mal y aca estan contempladas:
 
-- **La zona horaria.** El servidor de Vercel corre en UTC. Comparar el horario
+- **La zona horaria.** El servidor corre en UTC. Comparar el horario
   contra ese reloj mostraria "Cerrado" a las 19:00 de Bogota, en plena cena.
   Por eso el calculo usa `Intl.DateTimeFormat` fijado a la zona del local.
 - **Los locales que cierran despues de medianoche.** Para un bar de 20:00 a
@@ -232,9 +255,9 @@ npx localtunnel --port 3000   # en otra terminal
 
 Pega la URL `https://...` en `/demo/qr` y escanea el QR.
 
-**Deploy a Vercel**, para ir a mostrarlo. HTTPS por defecto, URL estable y no
-depende de tener la computadora prendida. Para una reunion de venta es lo unico
-confiable. Hay que cargar las tres variables de entorno en Vercel.
+**Usar produccion**, para ir a mostrarlo. HTTPS, URL estable y no depende de
+tener la computadora prendida. Para una reunion de venta es lo unico confiable.
+Ver "Desplegar en Hostinger".
 
 **Solo ver el menu en la red local**: `npm run dev:red` y abrir
 `http://<IP-de-tu-PC>:3000`. La IP sale con `ipconfig`.
@@ -255,6 +278,104 @@ Android, `.usdz` para iPhone). Despues se apuntan las columnas
 
 ---
 
+## Desplegar en Hostinger
+
+El hosting compartido corre una **glibc anterior a 2.29**, asi que los binarios
+nativos de Next (`@next/swc-linux-x64-gnu`) no cargan y Next cae al backend
+WASM. De ahi salen dos cosas del repositorio que parecen arbitrarias y no lo
+son:
+
+- **`next.config.mjs` y no `.ts`.** Sin binarios nativos Next no puede compilar
+  un config en TypeScript.
+- **`"build": "next build --webpack"`.** Turbopack exige esos binarios y aborta.
+
+El aviso `@next/swc-linux-x64-gnu ... GLIBC_2.29 not found` en el log es
+esperado y se repite decenas de veces. El build termina bien, en ~75 s.
+
+### Procedimiento
+
+1. `git archive HEAD --format=zip -o menup-src.zip` (solo lo commiteado, sin
+   `node_modules` ni `.env`).
+2. **Cargar las variables de entorno ANTES de construir.** Las `NEXT_PUBLIC_*`
+   se hornean en el build; si se cargan despues, el build sale con la lista de
+   imagenes vacia y cualquier plato con foto responde 500.
+3. Subir el zip a `public_html` por TUS y lanzar el build de Node 24, tipo
+   `next`, salida `.next`.
+
+**El build consume el zip**: despues de construir desaparece de `public_html`.
+Para reconstruir hay que volver a subirlo. Si se lanza sin fuentes, falla en
+~8 s con el log vacio.
+
+### El tipo MIME del .usdz
+
+Next sirve los archivos de `public/` y **su tabla de tipos no conoce `.usdz`**:
+lo mandaba como `application/octet-stream`, y Quick Look en iOS se niega a abrir
+un USDZ con ese tipo. O sea: el AR en iPhone muerto, que es la funcion que vende
+el producto. Vercel lo resolvia por su cuenta, por eso no se veia.
+
+Esta declarado en `headers()` de `next.config.mjs`. **No quitarlo.**
+
+---
+
+## Escaneo de platos
+
+El escaneo 3D **no ocurre en el navegador**: la fotogrametria necesita el sensor
+de profundidad del telefono y a eso solo llega una app nativa. No hay API web
+que lo haga.
+
+Lo que resuelve el panel es todo lo demas:
+
+- **Camara integrada** para la foto del plato, con reduccion a 1600 px antes de
+  subir. Solo aparece en contexto seguro (HTTPS o localhost), porque
+  `getUserMedia` no existe fuera de el.
+- **Guia paso a paso** apuntando a Scaniverse, que es gratuita en iPhone y
+  Android y exporta sin suscripcion.
+- **Conversion automatica de `.glb` a `.usdz`** con `prepareUSDZ()` de
+  `<model-viewer>`, que es publico desde la version 4.3.1. Las apps gratuitas
+  exportan GLB y el USDZ suele estar detras de un plan pago: sin esto, un
+  restaurante que escanea gratis se queda sin AR justo en iPhone. Corre en el
+  propio telefono, sin enviar nada a terceros.
+
+---
+
+## Apariencia del menu
+
+Cada restaurante elige color de marca, distribucion (grilla o lista) y forma de
+las esquinas desde `/admin/apariencia`, con vista previa en vivo.
+
+Se guarda en **una** columna `tema` jsonb y no en una columna por ajuste: cada
+opcion nueva como columna seria una migracion mas y un GRANT mas donde
+olvidarse.
+
+**No hay selector de color libre a proposito.** Un dueno de restaurante no es
+disenador, y un color arbitrario termina en menus ilegibles que despues parecen
+culpa del producto. Son combinaciones cerradas y probadas.
+
+El tema se inyecta como variables CSS en un contenedor, **nunca en `:root`**: el
+mismo servidor sirve a todos los restaurantes y tocar algo global filtraria el
+acento de un local al de otro al navegar.
+
+`getMenu` y `getPlato` toleran que la columna `tema` no exista (codigo `42703`):
+reintentan sin ella y sirven el aspecto por defecto. Sin esa red, la ventana
+entre desplegar y correr la migracion dejaba el menu de **todos** los
+restaurantes en HTTP 500.
+
+---
+
+## Guiones SQL utiles
+
+En `supabase/seed/`:
+
+| Archivo | Que hace |
+| --- | --- |
+| `restaurante-de-prueba.sql` | crea un local de practica para un usuario, separado del Demo |
+| `llenar-mi-restaurante.sql` | copia las secciones y platos del Demo a otro restaurante |
+
+Los dos fallan con un mensaje claro si el correo o el slug no existen, en vez de
+dejar filas huerfanas en silencio.
+
+---
+
 ## Como esta armado
 
 ```
@@ -267,6 +388,7 @@ src/
 ├── lib/
 │   ├── supabase/            clientes: publico, con sesion y de navegador
 │   ├── menu.ts              lecturas del menu publico
+│   ├── tema.ts              apariencia: acentos, distribuciones, esquinas
 │   ├── horarios.ts          abierto/cerrado con zona horaria
 │   ├── actions.ts           resenas y registro de vistas
 │   ├── admin/               lecturas y escrituras del panel
@@ -288,12 +410,18 @@ src/
     └── qr/          cartel imprimible
 
 supabase/
-├── migrations/
+├── migrations/                   correr EN ORDEN; ver "Aplicar el esquema"
 │   ├── 0001_init.sql             esquema, indices, vista, funcion y RLS
-│   └── 0002_panel.sql            dueno, horarios, storage y RLS de escritura
+│   ├── 0002_panel.sql            dueno, horarios, storage y RLS de escritura
+│   ├── 0003_quitar_adopcion_automatica.sql
+│   ├── 0004_cerrar_fugas_entre_restaurantes.sql
+│   ├── 0005_ocultar_owner_user_id.sql   permisos por COLUMNA, no por tabla
+│   └── 0006_apariencia_del_menu.sql     columna `tema` + su GRANT
 └── seed/
-    ├── datos-iniciales.ts         el menu de la demo (era src/data/menu.ts)
-    └── seed.ts                    npm run seed
+    ├── datos-iniciales.ts        el menu de la demo (era src/data/menu.ts)
+    ├── seed.ts                   npm run seed
+    ├── restaurante-de-prueba.sql local de practica para un usuario
+    └── llenar-mi-restaurante.sql copia la carta del Demo a otro local
 ```
 
 **Stack**: Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 ·
@@ -318,6 +446,11 @@ que corriera el efecto.
 
 ## Lo que todavia no existe
 
-Panel de administracion · autenticacion · moderacion de resenas · generacion
-automatica de modelos 3D · multiples restaurantes en la misma instalacion (el
-esquema lo soporta, la interfaz muestra uno).
+- **Moderacion de resenas.** Y algo mas urgente: las resenas **guardan el
+  comentario pero nadie lo lee nunca**. Ni el menu ni el panel consultan la
+  columna `comment`. Un comensal escribe "le faltaba sal" y ese texto queda
+  enterrado en la base.
+- **Generacion automatica de modelos 3D.** El escaneo lo hace una app nativa; el
+  panel guia el proceso y convierte el resultado, pero no escanea.
+- **Varios restaurantes por cuenta.** El esquema lo soporta (cada fila tiene su
+  `owner_user_id`), pero el panel asume uno por usuario.
