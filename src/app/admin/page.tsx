@@ -67,6 +67,7 @@ export default async function PanelPage() {
               ? `${resumen.totalResenas} resenas`
               : "Todavia nadie califico"
           }
+          href={resumen.totalResenas ? "/admin/opiniones" : undefined}
         />
         <Tarjeta
           etiqueta="Secciones"
@@ -125,20 +126,44 @@ function Tarjeta({
   etiqueta,
   valor,
   detalle,
+  href,
 }: {
   icono?: React.ReactNode;
   etiqueta: string;
   valor: string;
   detalle?: string;
+  /** Si viene, la tarjeta entera lleva a esa pantalla. */
+  href?: string;
 }) {
-  return (
-    <div className="border-borde bg-superficie flex flex-col gap-1 rounded-card border p-4">
+  const contenido = (
+    <>
       <span className="text-tinta-tenue flex items-center gap-1.5 text-xs font-semibold">
         {icono}
         {etiqueta}
       </span>
       <span className="text-tinta text-2xl font-bold tabular-nums">{valor}</span>
-      {detalle && <span className="text-tinta-tenue text-xs">{detalle}</span>}
-    </div>
+      {detalle && (
+        <span
+          className={
+            href
+              ? "text-tinta-suave text-xs underline underline-offset-4"
+              : "text-tinta-tenue text-xs"
+          }
+        >
+          {detalle}
+        </span>
+      )}
+    </>
+  );
+
+  const clases =
+    "border-borde bg-superficie flex flex-col gap-1 rounded-card border p-4";
+
+  return href ? (
+    <Link href={href} className={`${clases} hover:border-borde-fuerte`}>
+      {contenido}
+    </Link>
+  ) : (
+    <div className={clases}>{contenido}</div>
   );
 }

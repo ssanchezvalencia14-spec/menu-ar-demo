@@ -244,3 +244,58 @@ export async function getResumen(
     totalResenas: calificaciones.length,
   };
 }
+
+export interface OpinionAdmin {
+  id: string;
+  calificacion: number;
+  comentario: string | null;
+  fecha: string;
+  platoId: string;
+  platoNombre: string;
+}
+
+/**
+ * Tope de opiniones que trae la pantalla. Alcanza para meses de un restaurante
+ * normal; si algun dia no alcanza, hace falta paginar.
+ */
+export const MAXIMO_DE_OPINIONES = 500;
+
+/**
+ * Las resenas del restaurante, las mas nuevas primero, con su comentario.
+ *
+ * El `!inner` hace que el filtro por restaurante descarte la resena entera y
+ * no solo el plato anidado. Incluye platos pausados: el dueno ve todo.
+ */
+export async function getOpiniones(
+  restauranteId: string,
+): Promise<OpinionAdmin[]> {
+  const { supabase } = await exigirSesion();
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select(
+      "id, rating, comment, created_at, menu_items!inner(id, name, restaurant_id)",
+    )
+    .eq("menu_items.restaurant_id", restauranteId)
+    .order("created_at", { ascending: false })
+    .limit(MAXIMO_DE_OPINIONES);
+
+  if (error || !data) return [];
+
+  const filas = data as unknown as {
+    id: string;
+    rating: number;
+    comment: string | null;
+    created_at: string;
+    menu_items: { id: string; name: string };
+  }[];
+
+  return filas.map((fila) => ({
+    id: fila.id,
+    calificacion: fila.rating,
+    comentario: fila.comment?.trim() || null,
+    fecha: fila.created_at,
+    platoId: fila.menu_items.id,
+    platoNombre: fila.menu_items.name,
+  }));
+}

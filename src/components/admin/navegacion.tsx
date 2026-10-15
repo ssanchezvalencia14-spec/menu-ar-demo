@@ -9,6 +9,7 @@ import {
   Store,
   UtensilsCrossed,
   LayoutDashboard,
+  MessageSquare,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 const SECCIONES = [
   { href: "/admin", etiqueta: "Resumen", icono: LayoutDashboard },
   { href: "/admin/platos", etiqueta: "Platos", icono: UtensilsCrossed },
+  { href: "/admin/opiniones", etiqueta: "Opiniones", icono: MessageSquare },
   { href: "/admin/secciones", etiqueta: "Secciones", icono: LayoutGrid },
   { href: "/admin/horarios", etiqueta: "Horarios", icono: Clock },
   { href: "/admin/apariencia", etiqueta: "Apariencia", icono: Palette },
@@ -24,7 +26,7 @@ const SECCIONES = [
 
 /**
  * Navegacion del panel. Abajo en el celular (a la altura del pulgar) y como
- * barra lateral en pantallas grandes. Sin menus desplegables: las cinco
+ * barra lateral en pantallas grandes. Sin menus desplegables: todas las
  * secciones estan siempre a la vista.
  */
 export function NavegacionDelPanel() {
