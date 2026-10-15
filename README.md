@@ -16,7 +16,11 @@ Base de datos: proyecto de Supabase `hltqbwqvaolwzdnnxjxx`.
 Esa es la URL que va en el QR: tiene HTTPS, que es requisito para que el AR
 abra en iPhone.
 
-Repositorio: https://github.com/ssanchezvalencia14-spec/menu-ar-demo (privado).
+Repositorio: https://github.com/ssanchezvalencia14-spec/menu-ar-demo
+
+> **Si venis a trabajar en el proyecto, empeza por [EQUIPO.md](EQUIPO.md)**:
+> como arrancarlo en tu maquina, como trabajar y las trampas del proyecto que
+> cuestan horas si se descubren solas.
 
 ### Como se publica
 
