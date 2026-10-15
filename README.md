@@ -9,7 +9,8 @@ panel de administracion, escaneo de platos y apariencia configurable por
 restaurante.
 
 **En produccion**: https://dodgerblue-leopard-801353.hostingersite.com/demo
-Hosting compartido de Hostinger, cuenta `u945139586`.
+Hosting compartido de Hostinger. El usuario de la cuenta sale del panel
+de hPanel; no se anota aca porque este repositorio es publico.
 Base de datos: proyecto de Supabase `hltqbwqvaolwzdnnxjxx`.
 
 Esa es la URL que va en el QR: tiene HTTPS, que es requisito para que el AR
