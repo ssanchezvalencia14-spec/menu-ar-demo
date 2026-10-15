@@ -21,6 +21,8 @@ Repositorio: https://github.com/ssanchezvalencia14-spec/menu-ar-demo
 > **Si venis a trabajar en el proyecto, empeza por [EQUIPO.md](EQUIPO.md)**:
 > como arrancarlo en tu maquina, como trabajar y las trampas del proyecto que
 > cuestan horas si se descubren solas.
+>
+> Lo que falta por hacer esta en **[PENDIENTES.md](PENDIENTES.md)**.
 
 ### Como se publica
 

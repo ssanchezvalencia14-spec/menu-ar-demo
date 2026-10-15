@@ -198,17 +198,17 @@ apunta a la misma base.
 
 ## 6. Por donde seguir
 
-Lo que esta identificado y sin hacer, de mas a menos concreto:
+La lista completa de lo que falta, revisada contra el codigo y ordenada por lo
+que mas duele al vender, esta en **[PENDIENTES.md](PENDIENTES.md)**.
 
-1. **Mostrar los comentarios de las resenas.** Hoy se guardan en la columna
-   `comment` pero **nadie los lee nunca**: ni el menu ni el panel la consultan.
-   Un comensal escribe "le faltaba sal" y ese texto queda enterrado en la base.
-   Es la mejora con mejor relacion valor/esfuerzo: una pantalla en el panel.
-2. **Moderacion de resenas.** Hoy cualquiera puede dejar una y no hay forma de
-   ocultarla. Para vender a un restaurante real esto va a salir en la primera
-   reunion.
-3. **Varios restaurantes por cuenta.** El esquema lo soporta (cada fila tiene su
-   `owner_user_id`), pero el panel asume uno por usuario.
+Lo mas urgente de ahi, en una linea cada uno:
+
+1. **Los comentarios de las resenas no se leen nunca.** Se guardan y nadie los
+   muestra. Es la mejora con mejor relacion valor/esfuerzo.
+2. **Las resenas y las vistas no tienen ninguna defensa contra abuso.** Con la
+   clave publica se pueden insertar sin limite.
+3. **Ningun plato tiene foto**, y la subida desde la galeria no reduce la
+   imagen.
 
 ### Criterio de producto que conviene respetar
 
